@@ -14,7 +14,7 @@ export default function Hero() {
             🇺🇸 USA → 🇧🇫 Burkina Faso
           </span>
 
-          <h1 className="mt-6 text-7xl font-extrabold leading-tight tracking-tight text-slate-900">
+          <h1 className="mt-6 text-6xl md:text-7xl font-bold tracking-tight text-slate-900">
             We ship with care
             <br />
             from <span className="text-blue-700">USA</span> to{" "}
@@ -65,10 +65,10 @@ export default function Hero() {
             <Image
               src="/images/pat-hero.jpg"
               alt="PatExpress Shipping"
-              width={900}
+              width={1200}
               height={900}
               priority
-              className="h-100 w-full object-cover"
+              className="h-auto w-full object-contain md:object-cover"
             />
           </div>
         </div>
