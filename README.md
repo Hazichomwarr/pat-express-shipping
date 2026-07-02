@@ -1,36 +1,228 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PatExpressShipping
 
-## Getting Started
+A modern shipping platform connecting the United States 🇺🇸 and Burkina Faso 🇧🇫.
 
-First, run the development server:
+Customers can create shipment requests, choose a payment method, and track their packages from pickup to final delivery.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Vision
+
+PatExpressShipping aims to simplify international shipping by providing a transparent, secure, and user-friendly experience.
+
+The platform combines:
+
+- Online shipment creation
+- Multiple payment methods
+- Shipment tracking
+- Admin shipment management
+
+---
+
+# Tech Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Prisma
+- PostgreSQL
+- Auth.js
+- React Hook Form
+- Zod
+- Resend
+
+---
+
+# MVP Features
+
+## Public Website
+
+- Landing page
+- How It Works
+- Why Choose Us
+- Contact
+
+---
+
+## Customer
+
+- Create Shipment
+- View Shipment
+- Track Shipment
+- Payment History
+
+---
+
+## Payments
+
+- Card
+- Zelle
+- Orange Money
+- Cash (Burkina Faso)
+
+---
+
+## Admin
+
+- Dashboard
+- Manage Shipments
+- Update Shipment Status
+- Confirm Payments
+- Customer Management
+
+---
+
+# Business Workflow
+
+Customer
+
+↓
+
+Create Shipment
+
+↓
+
+Shipment Created
+
+↓
+
+Choose Payment Method
+
+↓
+
+Payment Confirmed
+
+↓
+
+Package Received (USA)
+
+↓
+
+In Transit
+
+↓
+
+Arrived in Burkina Faso
+
+↓
+
+Ready for Pickup / Delivery
+
+↓
+
+Delivered
+
+---
+
+# Core Domain Models
+
+- User
+- Shipment
+- ShipmentItem
+- Payment
+- TrackingEvent
+- Address
+
+---
+
+# Shipment States
+
+```ts
+PENDING_PAYMENT;
+
+PAYMENT_CONFIRMED;
+
+RECEIVED_US;
+
+IN_TRANSIT_TO_BF;
+
+ARRIVED_BF;
+
+READY_FOR_PICKUP;
+
+DELIVERED;
+
+CANCELLED;
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Payment States
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```ts
+PENDING;
 
-## Learn More
+PAID;
 
-To learn more about Next.js, take a look at the following resources:
+FAILED;
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+REFUNDED;
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+CANCELLED;
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Development Philosophy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Build from the business first.
+
+Business Workflow
+
+↓
+
+Data Model
+
+↓
+
+Services
+
+↓
+
+UI
+
+Never build screens before understanding the workflow.
+
+---
+
+# Folder Structure
+
+```
+app/
+components/
+lib/
+prisma/
+public/
+services/
+types/
+```
+
+---
+
+# Current Progress
+
+- ✅ Landing Page
+- ⏳ Authentication
+- ⏳ Shipment Creation
+- ⏳ Admin Dashboard
+- ⏳ Tracking
+- ⏳ Payments
+
+---
+
+# Future Improvements
+
+- SMS Notifications
+- Email Notifications
+- Customer Dashboard
+- Shipment Photos
+- Invoice Generation
+- Multi-language (English / French)
+- QR Code Tracking
+- Admin Analytics
+- Mobile App (Expo)
+
+---
+
+Built with ❤️ by HM Digital Solutions.
