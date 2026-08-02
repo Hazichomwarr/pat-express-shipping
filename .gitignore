@@ -46,3 +46,6 @@ next-env.d.ts
 .agents/
 .claude/
 .windsurf/
+
+# AI assistant skill metadata
+skills-lock.json
