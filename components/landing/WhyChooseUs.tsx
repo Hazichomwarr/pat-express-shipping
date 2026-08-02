@@ -43,7 +43,7 @@ export default function WhyChooseUs() {
           </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            Whether you're sending gifts, personal belongings, or business
+            Whether you&apos;re sending gifts, personal belongings, or business
             packages, we make shipping between the United States and Burkina
             Faso simple, transparent, and dependable.
           </p>
