@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ShipmentStatus {
+  AWAITING_PACKAGE
+  PACKAGE_RECEIVED_US
+  AWAITING_QUOTE
+  AWAITING_PAYMENT
+  PAYMENT_CONFIRMED
+  IN_TRANSIT_TO_BF
+  ARRIVED_BF
+  READY_FOR_PICKUP
+  DELIVERED
+  CANCELLED
+}
+
+enum ShipmentIntakeMethod {
+  DROP_OFF
+  MAIL_IN
+}
+
+enum ShipmentItemCategory {
+  GENERAL
+  CLOTHING
+  ELECTRONICS
+  DOCUMENTS
+  FOOD
+  HOUSEHOLD
+  COMMERCIAL_GOODS
+  OTHER
+}
+
+model Shipment {
+  id             String               @id @default(cuid())
+  trackingNumber String               @unique
+  status         ShipmentStatus       @default(AWAITING_PACKAGE)
+  intakeMethod   ShipmentIntakeMethod
+
+  senderName  String
+  senderPhone String
+  senderEmail String
+
+  recipientName  String
+  recipientPhone String
+  recipientEmail String?
+  recipientCity  String
+  recipientNotes String?
+
+  customerNotes String?
+  internalNotes String?
+
+  packageReceivedAt  DateTime?
+  paymentConfirmedAt DateTime?
+  arrivedBfAt        DateTime?
+  readyForPickupAt   DateTime?
+  deliveredAt        DateTime?
+  cancelledAt        DateTime?
+
+  items ShipmentItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([senderPhone])
+  @@index([senderEmail])
+  @@index([recipientPhone])
+  @@index([createdAt])
+}
+
+model ShipmentItem {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+
+  description   String
+  category      ShipmentItemCategory
+  quantity      Int                  @default(1)
+  declaredValue Decimal?             @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shipmentId])
+}
