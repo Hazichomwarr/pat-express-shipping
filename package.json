@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test src/services/_shared/*.test.ts",
-    "db:check": "tsx --conditions=react-server scripts/check-database.ts"
+    "db:check": "tsx --conditions=react-server scripts/check-database.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.6.0",
