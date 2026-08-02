@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/services/_shared/*.test.ts",
+    "test": "tsx --test src/services/_shared/*.test.ts src/validations/*.test.ts",
     "db:check": "tsx --conditions=react-server scripts/check-database.ts",
     "postinstall": "prisma generate"
   },
