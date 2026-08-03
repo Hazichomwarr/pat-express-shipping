@@ -24,7 +24,7 @@ export default function CTA() {
 
         <div className="mt-12 flex flex-col items-center justify-center gap-5 sm:flex-row">
           <Link
-            href="/shipments/new"
+            href="/expedier"
             className="inline-flex items-center gap-3 rounded-xl bg-white px-8 py-5 text-lg font-bold text-blue-700 transition hover:scale-105 hover:bg-slate-100"
           >
             <PackagePlus className="h-5 w-5" />
