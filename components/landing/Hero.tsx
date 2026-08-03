@@ -11,20 +11,20 @@ export default function Hero() {
 
         <div>
           <span className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-            🇺🇸 USA → 🇧🇫 Burkina Faso
+            🇺🇸 États-Unis → 🇧🇫 Burkina Faso
           </span>
 
           <h1 className="mt-6 text-6xl md:text-7xl font-bold tracking-tight text-slate-900">
-            We ship with care
+            Vos colis voyagent en toute confiance
             <br />
-            from <span className="text-blue-700">USA</span> to{" "}
-            <span className="text-red-600">BF</span>
+            des <span className="text-blue-700">États-Unis</span> au{" "}
+            <span className="text-red-600">Burkina Faso</span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-            Ship packages confidently from the United States to Burkina Faso.
-            Create a shipment, pay online or locally, and track every step until
-            delivery.
+            Envoyez vos colis des États-Unis vers le Burkina Faso en toute
+            sérénité. Créez votre envoi, payez en ligne ou sur place et suivez
+            chaque étape jusqu’à la livraison.
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -32,28 +32,28 @@ export default function Hero() {
               href="/expedier"
               className="rounded-lg bg-blue-700 px-7 py-4 text-center font-semibold text-white transition hover:bg-blue-800"
             >
-              Create Shipment
+              Créer un envoi
             </Link>
 
             <Link
               href="/track"
               className="rounded-lg border border-blue-700 px-7 py-4 text-center font-semibold text-blue-700 transition hover:bg-blue-50"
             >
-              Track Package
+              Suivre un colis
             </Link>
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-1">
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700">
-              ✓ Weekly departures
+              ✓ Départs chaque semaine
             </span>
 
             <span className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700">
-              ✓ Online & Local Payments
+              ✓ Paiement en ligne ou sur place
             </span>
 
             <span className="rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-medium text-orange-700">
-              ✓ Real-time Package Tracking
+              ✓ Suivi du colis en temps réel
             </span>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function Hero() {
           <div className="overflow-hidden rounded-3xl shadow-2xl">
             <Image
               src="/images/pat-hero.jpg"
-              alt="PatExpress Shipping"
+              alt="PatExpressShipping"
               width={1200}
               height={900}
               priority

@@ -5,27 +5,27 @@ import { ShieldCheck, Wallet, PackageSearch, Headset } from "lucide-react";
 const reasons = [
   {
     icon: ShieldCheck,
-    title: "Safe & Reliable Shipping",
+    title: "Des envois sûrs et fiables",
     description:
-      "Every shipment is carefully handled from pickup in the USA to delivery in Burkina Faso.",
+      "Chaque colis est pris en charge avec soin aux États-Unis jusqu’à sa livraison au Burkina Faso.",
   },
   {
     icon: Wallet,
-    title: "Flexible Payment Options",
+    title: "Des modes de paiement flexibles",
     description:
-      "Pay securely online or choose Zelle, Orange Money, or cash payment in Burkina Faso.",
+      "Payez en toute sécurité en ligne, par Zelle, par Orange Money ou en espèces au Burkina Faso.",
   },
   {
     icon: PackageSearch,
-    title: "Real-Time Tracking",
+    title: "Un suivi en temps réel",
     description:
-      "Know exactly where your shipment is with tracking updates throughout its journey.",
+      "Restez informé de la progression de votre colis grâce aux mises à jour tout au long de son parcours.",
   },
   {
     icon: Headset,
-    title: "Dedicated Support",
+    title: "Un accompagnement à votre écoute",
     description:
-      "Our team is available to answer questions and help you throughout the shipping process.",
+      "Notre équipe répond à vos questions et vous accompagne à chaque étape de votre envoi.",
   },
 ];
 
@@ -35,17 +35,17 @@ export default function WhyChooseUs() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-3xl text-center">
           <span className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
-            Why Choose PatExpressShipping
+            Pourquoi choisir PatExpressShipping
           </span>
 
           <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl">
-            Shipping built around trust, simplicity and peace of mind.
+            La confiance, la simplicité et la sérénité au cœur de chaque envoi.
           </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            Whether you&apos;re sending gifts, personal belongings, or business
-            packages, we make shipping between the United States and Burkina
-            Faso simple, transparent, and dependable.
+            Cadeaux, effets personnels ou marchandises professionnelles : nous
+            rendons vos envois entre les États-Unis et le Burkina Faso simples,
+            transparents et fiables.
           </p>
         </div>
 
@@ -76,13 +76,12 @@ export default function WhyChooseUs() {
 
         <div className="mt-20 rounded-3xl bg-blue-700 px-8 py-10 text-center text-white lg:px-16">
           <h3 className="text-3xl font-bold">
-            Trusted shipping from the USA to Burkina Faso
+            Des envois de confiance des États-Unis au Burkina Faso
           </h3>
 
           <p className="mx-auto mt-4 max-w-3xl text-lg text-blue-100">
-            From your first shipment request to the final delivery, our mission
-            is to provide a secure, affordable, and stress-free shipping
-            experience.
+            De votre première demande jusqu’à la livraison, notre mission est de
+            vous offrir une expérience sûre, accessible et sans stress.
           </p>
         </div>
       </div>

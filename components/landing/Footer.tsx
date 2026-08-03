@@ -8,21 +8,21 @@ type FooterProps = {
 const footerContent = {
   en: {
     description:
-      "Reliable shipping services from the United States to Burkina Faso. We make international shipping simple, secure, and transparent.",
-    quickLinksTitle: "Quick Links",
+      "Un service d’envoi fiable des États-Unis vers le Burkina Faso. Nous rendons chaque envoi simple, sûr et transparent.",
+    quickLinksTitle: "Liens rapides",
     quickLinks: [
-      { label: "Home", href: "/" },
-      { label: "Create Shipment", href: "/expedier" },
-      { label: "Track Package", href: "/track" },
-      { label: "How It Works", href: "/#how-it-works" },
+      { label: "Accueil", href: "/" },
+      { label: "Créer un envoi", href: "/expedier" },
+      { label: "Suivre un colis", href: "/track" },
+      { label: "Fonctionnement", href: "/#how-it-works" },
     ],
     contact: "Contact",
-    follow: "Follow Us",
+    follow: "Suivez-nous",
     followDescription:
-      "Stay connected for shipping updates and announcements.",
-    rights: "All rights reserved.",
+      "Restez informé des départs, des arrivées et de nos actualités.",
+    rights: "Tous droits réservés.",
     connection:
-      "Proudly connecting the United States 🇺🇸 and Burkina Faso 🇧🇫",
+      "Nous relions fièrement les États-Unis 🇺🇸 et le Burkina Faso 🇧🇫",
   },
   fr: {
     description:
@@ -105,7 +105,7 @@ export default function Footer({ language = "en" }: FooterProps) {
                 <span>
                   Newark, New Jersey
                   <br />
-                  {language === "fr" ? "États-Unis" : "United States"}
+                  {language === "fr" ? "États-Unis" : "États-Unis"}
                 </span>
               </li>
             </ul>

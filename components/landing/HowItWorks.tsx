@@ -9,30 +9,30 @@ import {
 const steps = [
   {
     number: "01",
-    title: "Create your shipment",
+    title: "Créez votre envoi",
     description:
-      "Enter your sender, receiver, destination, and package details in a simple online form.",
+      "Renseignez simplement en ligne les coordonnées de l’expéditeur et du destinataire, ainsi que les informations sur le colis.",
     icon: ClipboardList,
   },
   {
     number: "02",
-    title: "Choose how to pay",
+    title: "Choisissez votre mode de paiement",
     description:
-      "Pay online, by Zelle, Orange Money in Burkina Faso, or cash through local confirmation.",
+      "Payez en ligne, par Zelle, par Orange Money au Burkina Faso ou en espèces après confirmation locale.",
     icon: CreditCard,
   },
   {
     number: "03",
-    title: "We receive & ship",
+    title: "Nous recevons et expédions votre colis",
     description:
-      "Our team confirms your package, prepares it for departure, and ships it securely.",
+      "Notre équipe confirme la réception de votre colis, le prépare au départ et l’expédie en toute sécurité.",
     icon: PackageCheck,
   },
   {
     number: "04",
-    title: "Track until delivery",
+    title: "Suivez-le jusqu’à la livraison",
     description:
-      "Follow your shipment updates from the USA to Burkina Faso until it is delivered.",
+      "Suivez l’évolution de votre envoi des États-Unis jusqu’au Burkina Faso, jusqu’à sa livraison.",
     icon: MapPinned,
   },
 ];
@@ -43,17 +43,17 @@ export default function HowItWorks() {
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <span className="text-sm font-bold uppercase tracking-[0.25em] text-blue-700">
-            How it works
+            Comment ça fonctionne
           </span>
 
           <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-950 md:text-5xl">
-            Shipping made simple from start to delivery.
+            Un envoi simple, de la demande à la livraison.
           </h2>
 
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            PatExpressShipping gives customers a clear process: create a
-            shipment, choose a payment option, and track the package every step
-            of the way.
+            PatExpressShipping vous accompagne à chaque étape : créez votre
+            envoi, choisissez votre mode de paiement et suivez votre colis tout
+            au long de son parcours.
           </p>
         </div>
 

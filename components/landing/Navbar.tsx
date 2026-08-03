@@ -6,17 +6,17 @@ type NavbarProps = {
 
 const navigation = {
   en: {
-    tagline: "From USA to Burkina Faso",
+    tagline: "Des États-Unis vers le Burkina Faso",
     links: [
-      { label: "Home", href: "/" },
-      { label: "How It Works", href: "/#how-it-works" },
-      { label: "Services & Pricing", href: "/#services" },
-      { label: "Track Package", href: "/track" },
-      { label: "About Us", href: "/#about" },
-      { label: "Contact Us", href: "/#contact" },
+      { label: "Accueil", href: "/" },
+      { label: "Fonctionnement", href: "/#how-it-works" },
+      { label: "Services et tarifs", href: "/#services" },
+      { label: "Suivre un colis", href: "/track" },
+      { label: "À propos", href: "/#about" },
+      { label: "Contact", href: "/#contact" },
     ],
-    createShipment: "Create Shipment",
-    login: "Log In",
+    createShipment: "Créer un envoi",
+    login: "Connexion",
   },
   fr: {
     tagline: "Des États-Unis vers le Burkina Faso",
