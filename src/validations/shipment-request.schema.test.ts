@@ -274,3 +274,164 @@ test("parsing does not mutate the original input object", () => {
 
   assert.deepEqual(input, originalInput);
 });
+
+function assertFirstErrorMessage(
+  result: ReturnType<typeof shipmentItemInputSchema.safeParse>,
+  expectedMessage: string,
+): void;
+function assertFirstErrorMessage(
+  result: ReturnType<typeof createShipmentRequestInputSchema.safeParse>,
+  expectedMessage: string,
+): void;
+function assertFirstErrorMessage(
+  result:
+    | ReturnType<typeof shipmentItemInputSchema.safeParse>
+    | ReturnType<typeof createShipmentRequestInputSchema.safeParse>,
+  expectedMessage: string,
+) {
+  assert.equal(result.success, false);
+  if (!result.success) {
+    assert.equal(result.error.issues[0].message, expectedMessage);
+  }
+}
+
+test("uses the approved French messages for customer contact fields", () => {
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      senderName: "A",
+    }),
+    "Le nom doit contenir au moins 2 caractères.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      recipientName: "A".repeat(121),
+    }),
+    "Le nom ne peut pas dépasser 120 caractères.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      senderPhone: "123",
+    }),
+    "Le numéro de téléphone doit contenir au moins 7 caractères.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      senderPhone: "1".repeat(31),
+    }),
+    "Le numéro de téléphone ne peut pas dépasser 30 caractères.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      senderPhone: "555-ABC-1234",
+    }),
+    "Le numéro de téléphone contient des caractères non autorisés.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      senderEmail: "adresse-invalide",
+    }),
+    "Veuillez saisir une adresse e-mail valide.",
+  );
+});
+
+test("uses the approved French messages for city and item fields", () => {
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      recipientCity: "O",
+    }),
+    "La ville doit contenir au moins 2 caractères.",
+  );
+  assertFirstErrorMessage(
+    shipmentItemInputSchema.safeParse({
+      ...validRequest().items[0],
+      description: "A",
+    }),
+    "La description doit contenir au moins 2 caractères.",
+  );
+  assertFirstErrorMessage(
+    shipmentItemInputSchema.safeParse({
+      ...validRequest().items[0],
+      category: "INVALID",
+    }),
+    "Choisissez une catégorie d’article valide.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      intakeMethod: "INVALID",
+    }),
+    "Choisissez un mode de dépôt valide.",
+  );
+});
+
+test("uses distinct French quantity messages", () => {
+  for (const [quantity, expectedMessage] of [
+    ["3", "Veuillez saisir une quantité valide."],
+    [1.5, "La quantité doit être un nombre entier."],
+    [0, "La quantité doit être au moins égale à 1."],
+    [1000, "La quantité ne peut pas dépasser 999."],
+  ] as const) {
+    assertFirstErrorMessage(
+      shipmentItemInputSchema.safeParse({
+        ...validRequest().items[0],
+        quantity,
+      }),
+      expectedMessage,
+    );
+  }
+});
+
+test("uses distinct French declared-value messages", () => {
+  for (const [declaredValue, expectedMessage] of [
+    [Number.NaN, "Veuillez saisir une valeur déclarée valide."],
+    [-1, "La valeur déclarée ne peut pas être négative."],
+    [10_000_000_000, "La valeur déclarée dépasse la limite autorisée."],
+    [12.345, "La valeur déclarée ne peut pas avoir plus de deux décimales."],
+  ] as const) {
+    assertFirstErrorMessage(
+      shipmentItemInputSchema.safeParse({
+        ...validRequest().items[0],
+        declaredValue,
+      }),
+      expectedMessage,
+    );
+  }
+});
+
+test("uses French item-count and note-length messages", () => {
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      items: [],
+    }),
+    "Ajoutez au moins un article à l’envoi.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      items: Array.from({ length: 51 }, () => validRequest().items[0]),
+    }),
+    "Un envoi ne peut pas contenir plus de 50 articles.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      recipientNotes: "N".repeat(501),
+    }),
+    "Les notes pour le destinataire ne peuvent pas dépasser 500 caractères.",
+  );
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      customerNotes: "N".repeat(1001),
+    }),
+    "Les notes concernant l’envoi ne peuvent pas dépasser 1 000 caractères.",
+  );
+});
