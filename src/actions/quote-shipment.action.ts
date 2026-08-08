@@ -2,7 +2,7 @@
 
 import type { ShipmentQuoteCurrency, ShipmentStatus } from "@prisma/client";
 
-import { executeQuoteShipmentAction } from "./quote-shipment.action-handler";
+import { executeProtectedQuoteShipmentAction } from "./quote-shipment.action-authorization";
 
 export type QuoteShipmentActionState =
   | { status: "idle" }
@@ -27,10 +27,9 @@ export type QuoteShipmentActionState =
     }
   | { status: "error"; message: string };
 
-// SECURITY: Wire this action only to an authenticated staff surface once staff authorization exists.
 export async function quoteShipmentAction(
   previousState: QuoteShipmentActionState,
   formData: FormData,
 ): Promise<QuoteShipmentActionState> {
-  return executeQuoteShipmentAction(previousState, formData);
+  return executeProtectedQuoteShipmentAction(previousState, formData);
 }

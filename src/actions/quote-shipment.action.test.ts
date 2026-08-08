@@ -11,7 +11,9 @@ import {
   quoteShipmentAction,
   type QuoteShipmentActionState,
 } from "./quote-shipment.action";
+import { executeProtectedQuoteShipmentAction } from "./quote-shipment.action-authorization";
 import { executeQuoteShipmentAction } from "./quote-shipment.action-handler";
+import { StaffAuthenticationRequiredError } from "../services/_shared/require-staff";
 import {
   type QuoteShipmentResult,
   ShipmentNotFoundError,
@@ -62,6 +64,125 @@ test("exports the two-parameter framework action signature", () => {
   ) => Promise<QuoteShipmentActionState> = quoteShipmentAction;
 
   assert.equal(action.length, 2);
+});
+
+for (const role of ["ADMIN", "STAFF"] as const) {
+  test(`allows an authenticated active ${role} to reach quotation handling`, async () => {
+    const expectedState: QuoteShipmentActionState = {
+      status: "success",
+      message: "authorized",
+      quotation: {
+        shipmentId: SUCCESS_RESULT.id,
+        trackingNumber: SUCCESS_RESULT.trackingNumber,
+        status: SUCCESS_RESULT.status,
+        measuredWeightKg: SUCCESS_RESULT.measuredWeightKg,
+        ratePerKg: SUCCESS_RESULT.ratePerKg,
+        quotedAmount: SUCCESS_RESULT.quotedAmount,
+        quoteCurrency: SUCCESS_RESULT.quoteCurrency,
+        quotedAt: SUCCESS_RESULT.quotedAt.toISOString(),
+      },
+    };
+    const callOrder: string[] = [];
+
+    const state = await executeProtectedQuoteShipmentAction(
+      IDLE_STATE,
+      validFormData(),
+      {
+        requireStaff: async () => {
+          callOrder.push("authorize");
+          return {
+            id: "staff_1",
+            name: "Staff Member",
+            email: "staff@example.com",
+            role,
+          };
+        },
+        handleQuoteShipment: async () => {
+          callOrder.push("handle");
+          return expectedState;
+        },
+      },
+    );
+
+    assert.deepEqual(callOrder, ["authorize", "handle"]);
+    assert.strictEqual(state, expectedState);
+  });
+}
+
+for (const scenario of ["anonymous", "inactive", "deleted"] as const) {
+  test(`rejects ${scenario} staff before quotation handling`, async () => {
+    let handlerCalls = 0;
+
+    const state = await executeProtectedQuoteShipmentAction(
+      IDLE_STATE,
+      validFormData(),
+      {
+        requireStaff: async () => {
+          throw new StaffAuthenticationRequiredError();
+        },
+        handleQuoteShipment: async () => {
+          handlerCalls += 1;
+          return IDLE_STATE;
+        },
+      },
+    );
+
+    assert.deepEqual(state, {
+      status: "error",
+      message:
+        "Vous devez être connecté en tant que membre du personnel pour effectuer cette action.",
+    });
+    assert.equal(handlerCalls, 0);
+    assert.equal(JSON.stringify(state).includes("staff"), false);
+    assert.equal(JSON.stringify(state).includes("session"), false);
+  });
+}
+
+test("preserves validation and quotation error states after authorization", async () => {
+  const states: QuoteShipmentActionState[] = [
+    {
+      status: "validation_error",
+      message: "Veuillez corriger les informations du devis.",
+      fieldErrors: {
+        measuredWeightKg: ["Le poids doit être supérieur à 0 kg."],
+      },
+    },
+    { status: "error", message: "Cet envoi est introuvable." },
+  ];
+
+  for (const expectedState of states) {
+    const state = await executeProtectedQuoteShipmentAction(
+      IDLE_STATE,
+      validFormData(),
+      {
+        requireStaff: async () => ({ id: "staff_1" }),
+        handleQuoteShipment: async () => expectedState,
+      },
+    );
+
+    assert.strictEqual(state, expectedState);
+  }
+});
+
+test("does not expose unexpected authorization error details", async () => {
+  const state = await executeProtectedQuoteShipmentAction(
+    IDLE_STATE,
+    validFormData(),
+    {
+      requireStaff: async () => {
+        throw new Error("private JWT and database details");
+      },
+      handleQuoteShipment: async () => IDLE_STATE,
+    },
+  );
+
+  assert.deepEqual(state, {
+    status: "error",
+    message:
+      "Vous devez être connecté en tant que membre du personnel pour effectuer cette action.",
+  });
+  assert.equal(JSON.stringify(state).includes("JWT"), false);
+  assert.equal(JSON.stringify(state).includes("database"), false);
 });
 
 test("passes the shipment ID separately and converts quotation numbers", async () => {
