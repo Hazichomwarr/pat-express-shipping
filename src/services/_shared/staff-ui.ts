@@ -1,4 +1,9 @@
-import type { ShipmentIntakeMethod, ShipmentStatus } from "@prisma/client";
+import type {
+  ShipmentIntakeMethod,
+  ShipmentPaymentMethod,
+  ShipmentPaymentStatus,
+  ShipmentStatus,
+} from "@prisma/client";
 
 const shipmentStatusLabels: Record<ShipmentStatus, string> = {
   AWAITING_PACKAGE: "En attente du colis",
@@ -18,6 +23,17 @@ const shipmentIntakeMethodLabels: Record<ShipmentIntakeMethod, string> = {
   MAIL_IN: "Envoi par courrier",
 };
 
+const shipmentPaymentMethodLabels: Record<ShipmentPaymentMethod, string> = {
+  ZELLE: "Zelle",
+  CASH: "Espèces",
+};
+
+const shipmentPaymentStatusLabels: Record<ShipmentPaymentStatus, string> = {
+  PENDING: "En attente",
+  CONFIRMED: "Confirmé",
+  CANCELLED: "Annulé",
+};
+
 export function getShipmentStatusLabel(status: ShipmentStatus): string {
   return shipmentStatusLabels[status];
 }
@@ -26,6 +42,18 @@ export function getShipmentIntakeMethodLabel(
   intakeMethod: ShipmentIntakeMethod,
 ): string {
   return shipmentIntakeMethodLabels[intakeMethod];
+}
+
+export function getShipmentPaymentMethodLabel(
+  method: ShipmentPaymentMethod,
+): string {
+  return shipmentPaymentMethodLabels[method];
+}
+
+export function getShipmentPaymentStatusLabel(
+  status: ShipmentPaymentStatus,
+): string {
+  return shipmentPaymentStatusLabels[status];
 }
 
 export function getSafeStaffCallbackUrl(value: unknown): string {

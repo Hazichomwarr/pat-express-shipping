@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ShipmentIntakeMethod, ShipmentStatus } from "@prisma/client";
+import {
+  ShipmentIntakeMethod,
+  ShipmentPaymentMethod,
+  ShipmentPaymentStatus,
+  ShipmentStatus,
+} from "@prisma/client";
 
 import {
   getSafeStaffCallbackUrl,
   getShipmentIntakeMethodLabel,
+  getShipmentPaymentMethodLabel,
+  getShipmentPaymentStatusLabel,
   getShipmentStatusLabel,
 } from "./staff-ui";
 
@@ -17,6 +24,32 @@ test("accepts only safe local staff callback paths", () => {
   assert.equal(
     getSafeStaffCallbackUrl("/staff/shipments/shipment_1/quote?from=login"),
     "/staff/shipments/shipment_1/quote?from=login",
+  );
+});
+
+test("provides French payment-method labels", () => {
+  assert.equal(
+    getShipmentPaymentMethodLabel(ShipmentPaymentMethod.ZELLE),
+    "Zelle",
+  );
+  assert.equal(
+    getShipmentPaymentMethodLabel(ShipmentPaymentMethod.CASH),
+    "Espèces",
+  );
+});
+
+test("provides French payment-status labels", () => {
+  assert.equal(
+    getShipmentPaymentStatusLabel(ShipmentPaymentStatus.PENDING),
+    "En attente",
+  );
+  assert.equal(
+    getShipmentPaymentStatusLabel(ShipmentPaymentStatus.CONFIRMED),
+    "Confirmé",
+  );
+  assert.equal(
+    getShipmentPaymentStatusLabel(ShipmentPaymentStatus.CANCELLED),
+    "Annulé",
   );
 });
 
