@@ -40,6 +40,10 @@ enum ShipmentItemCategory {
   OTHER
 }
 
+enum ShipmentQuoteCurrency {
+  USD
+}
+
 model Shipment {
   id             String               @id @default(cuid())
   trackingNumber String               @unique
@@ -58,6 +62,13 @@ model Shipment {
 
   customerNotes String?
   internalNotes String?
+
+  // Quote fields are all null before quotation and all populated after quotation.
+  measuredWeightKg Decimal?               @db.Decimal(10, 3)
+  ratePerKg        Decimal?               @db.Decimal(12, 2)
+  quotedAmount     Decimal?               @db.Decimal(12, 2)
+  quoteCurrency    ShipmentQuoteCurrency?
+  quotedAt         DateTime?
 
   packageReceivedAt  DateTime?
   paymentConfirmedAt DateTime?
