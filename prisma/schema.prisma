@@ -44,6 +44,17 @@ enum ShipmentQuoteCurrency {
   USD
 }
 
+enum ShipmentPaymentMethod {
+  ZELLE
+  CASH
+}
+
+enum ShipmentPaymentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
 enum StaffRole {
   ADMIN
   STAFF
@@ -82,7 +93,8 @@ model Shipment {
   deliveredAt        DateTime?
   cancelledAt        DateTime?
 
-  items ShipmentItem[]
+  items    ShipmentItem[]
+  payments ShipmentPayment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,6 +130,36 @@ model StaffUser {
   role         StaffRole @default(STAFF)
   isActive     Boolean   @default(true)
 
+  confirmedPayments ShipmentPayment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ShipmentPayment {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Restrict)
+
+  method   ShipmentPaymentMethod
+  status   ShipmentPaymentStatus @default(PENDING)
+  amount   Decimal               @db.Decimal(12, 2)
+  currency ShipmentQuoteCurrency
+
+  // ZELLE requires zelleName; CASH keeps it null. A future service enforces this invariant.
+  zelleName String?
+
+  // PENDING has no lifecycle timestamps or confirmer. CONFIRMED has confirmedAt and a
+  // confirming staff identity. CANCELLED has cancelledAt and no confirmation metadata.
+  confirmedAt        DateTime?
+  confirmedByStaffId String?
+  confirmedBy        StaffUser? @relation(fields: [confirmedByStaffId], references: [id], onDelete: Restrict)
+  cancelledAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shipmentId])
+  @@index([status])
+  @@index([confirmedByStaffId])
 }
