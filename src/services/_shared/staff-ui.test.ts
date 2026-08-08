@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   ShipmentIntakeMethod,
+  ShipmentItemCategory,
   ShipmentPaymentMethod,
   ShipmentPaymentStatus,
   ShipmentStatus,
@@ -10,6 +11,7 @@ import {
 
 import {
   getSafeStaffCallbackUrl,
+  getShipmentItemCategoryLabel,
   getShipmentIntakeMethodLabel,
   getShipmentPaymentMethodLabel,
   getShipmentPaymentStatusLabel,
@@ -96,4 +98,21 @@ test("provides French intake-method labels", () => {
     getShipmentIntakeMethodLabel(ShipmentIntakeMethod.MAIL_IN),
     "Envoi par courrier",
   );
+});
+
+test("provides a French label for every shipment-item category", () => {
+  const expectedLabels: Record<ShipmentItemCategory, string> = {
+    GENERAL: "Général",
+    CLOTHING: "Vêtements",
+    ELECTRONICS: "Électronique",
+    DOCUMENTS: "Documents",
+    FOOD: "Produits alimentaires",
+    HOUSEHOLD: "Articles ménagers",
+    COMMERCIAL_GOODS: "Marchandises commerciales",
+    OTHER: "Autre",
+  };
+
+  for (const category of Object.values(ShipmentItemCategory)) {
+    assert.equal(getShipmentItemCategoryLabel(category), expectedLabels[category]);
+  }
 });

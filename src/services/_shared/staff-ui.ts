@@ -1,9 +1,21 @@
 import type {
+  ShipmentItemCategory,
   ShipmentIntakeMethod,
   ShipmentPaymentMethod,
   ShipmentPaymentStatus,
   ShipmentStatus,
 } from "@prisma/client";
+
+const shipmentItemCategoryLabels: Record<ShipmentItemCategory, string> = {
+  GENERAL: "Général",
+  CLOTHING: "Vêtements",
+  ELECTRONICS: "Électronique",
+  DOCUMENTS: "Documents",
+  FOOD: "Produits alimentaires",
+  HOUSEHOLD: "Articles ménagers",
+  COMMERCIAL_GOODS: "Marchandises commerciales",
+  OTHER: "Autre",
+};
 
 const shipmentStatusLabels: Record<ShipmentStatus, string> = {
   AWAITING_PACKAGE: "En attente du colis",
@@ -36,6 +48,12 @@ const shipmentPaymentStatusLabels: Record<ShipmentPaymentStatus, string> = {
 
 export function getShipmentStatusLabel(status: ShipmentStatus): string {
   return shipmentStatusLabels[status];
+}
+
+export function getShipmentItemCategoryLabel(
+  category: ShipmentItemCategory,
+): string {
+  return shipmentItemCategoryLabels[category];
 }
 
 export function getShipmentIntakeMethodLabel(
