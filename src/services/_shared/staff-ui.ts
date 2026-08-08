@@ -59,7 +59,7 @@ export function getShipmentPaymentStatusLabel(
 export function getSafeStaffCallbackUrl(value: unknown): string {
   if (
     typeof value !== "string" ||
-    !value.startsWith("/staff/") ||
+    (value !== "/staff" && !value.startsWith("/staff/")) ||
     value.startsWith("//") ||
     value.includes("\\")
   ) {
@@ -71,7 +71,7 @@ export function getSafeStaffCallbackUrl(value: unknown): string {
 
     if (
       url.origin !== "https://patexpressshipping.local" ||
-      !url.pathname.startsWith("/staff/") ||
+      (url.pathname !== "/staff" && !url.pathname.startsWith("/staff/")) ||
       url.pathname === "/staff/login"
     ) {
       return "/";

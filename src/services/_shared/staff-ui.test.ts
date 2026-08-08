@@ -17,6 +17,7 @@ import {
 } from "./staff-ui";
 
 test("accepts only safe local staff callback paths", () => {
+  assert.equal(getSafeStaffCallbackUrl("/staff"), "/staff");
   assert.equal(
     getSafeStaffCallbackUrl("/staff/shipments/shipment_1/quote"),
     "/staff/shipments/shipment_1/quote",
