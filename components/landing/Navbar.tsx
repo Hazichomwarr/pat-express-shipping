@@ -11,7 +11,7 @@ const navigation = {
       { label: "Accueil", href: "/" },
       { label: "Fonctionnement", href: "/#how-it-works" },
       { label: "Services et tarifs", href: "/#services" },
-      { label: "Suivre un colis", href: "/track" },
+      { label: "Suivre un colis", href: "/suivi" },
       { label: "À propos", href: "/#about" },
       { label: "Contact", href: "/#contact" },
     ],
