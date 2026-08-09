@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import StaffHeader from "@/components/staff/StaffHeader";
+import ShipmentStatusControl from "@/components/staff/ShipmentStatusControl";
 import { prisma } from "@/src/lib/prisma";
 import {
   requireStaff,
@@ -22,6 +23,7 @@ import {
 } from "@/src/services/_shared/require-staff";
 import {
   getShipmentQuoteState,
+  getStaffShipmentStatusActionPresentation,
   getStaffShipmentWorkspaceAction,
 } from "@/src/services/_shared/staff-shipment-workspace";
 import {
@@ -266,6 +268,9 @@ export default async function StaffShipmentWorkspacePage({
   if (!shipment) notFound();
 
   const nextAction = getStaffShipmentWorkspaceAction(shipment.status, shipment.id);
+  const operationalAction =
+    getStaffShipmentStatusActionPresentation(shipment.status);
+  const loginUrl = `/staff/login?callbackUrl=${encodeURIComponent(workspacePath)}`;
   const milestones = [
     { label: "Demande créée", date: shipment.createdAt },
     { label: "Colis reçu aux États-Unis", date: shipment.packageReceivedAt },
@@ -315,6 +320,14 @@ export default async function StaffShipmentWorkspacePage({
               {nextAction.linkLabel}
               <ArrowRight aria-hidden="true" className="h-5 w-5" />
             </Link>
+          ) : null}
+          {operationalAction ? (
+            <ShipmentStatusControl
+              key={shipment.status}
+              shipmentId={shipment.id}
+              presentation={operationalAction}
+              loginUrl={loginUrl}
+            />
           ) : null}
         </section>
 

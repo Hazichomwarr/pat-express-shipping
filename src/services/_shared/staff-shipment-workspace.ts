@@ -17,6 +17,53 @@ export type StaffShipmentWorkspaceAction = {
   linkLabel?: string;
 };
 
+export type StaffShipmentStatusActionPresentation = {
+  toStatus: ShipmentStatus;
+  label: string;
+  description: string;
+  requiresConfirmation?: boolean;
+};
+
+const staffShipmentStatusActions: Readonly<
+  Partial<Record<ShipmentStatus, StaffShipmentStatusActionPresentation>>
+> = {
+  [ShipmentStatus.AWAITING_PACKAGE]: {
+    toStatus: ShipmentStatus.PACKAGE_RECEIVED_US,
+    label: "Réceptionner le colis",
+    description:
+      "Confirme que le colis a été physiquement reçu aux États-Unis.",
+  },
+  [ShipmentStatus.PACKAGE_RECEIVED_US]: {
+    toStatus: ShipmentStatus.AWAITING_QUOTE,
+    label: "Mettre en attente de devis",
+    description: "Le colis reçu est prêt à être pesé et facturé.",
+  },
+  [ShipmentStatus.PAYMENT_CONFIRMED]: {
+    toStatus: ShipmentStatus.IN_TRANSIT_TO_BF,
+    label: "Marquer en transit vers le Burkina Faso",
+    description:
+      "Confirme que l’envoi a quitté l’étape de paiement et est maintenant en transit.",
+  },
+  [ShipmentStatus.IN_TRANSIT_TO_BF]: {
+    toStatus: ShipmentStatus.ARRIVED_BF,
+    label: "Marquer arrivé au Burkina Faso",
+    description:
+      "Confirme l’arrivée physique de l’envoi au Burkina Faso.",
+  },
+  [ShipmentStatus.ARRIVED_BF]: {
+    toStatus: ShipmentStatus.READY_FOR_PICKUP,
+    label: "Marquer prêt pour le retrait",
+    description:
+      "Confirme que l’envoi peut maintenant être retiré par le destinataire.",
+  },
+  [ShipmentStatus.READY_FOR_PICKUP]: {
+    toStatus: ShipmentStatus.DELIVERED,
+    label: "Marquer comme livré",
+    description: "Confirme que l’envoi a été remis au destinataire.",
+    requiresConfirmation: true,
+  },
+};
+
 export function getShipmentQuoteState(
   quote: ShipmentQuoteSnapshot,
 ): ShipmentQuoteState {
@@ -33,25 +80,29 @@ export function getShipmentQuoteState(
   return "partial";
 }
 
+export function getStaffShipmentStatusActionPresentation(
+  status: ShipmentStatus,
+): StaffShipmentStatusActionPresentation | null {
+  return staffShipmentStatusActions[status] ?? null;
+}
+
 export function getStaffShipmentWorkspaceAction(
   status: ShipmentStatus,
   shipmentId: string,
 ): StaffShipmentWorkspaceAction {
+  const operationalAction =
+    getStaffShipmentStatusActionPresentation(status);
+
+  if (operationalAction) {
+    return {
+      title: operationalAction.label,
+      description: operationalAction.description,
+    };
+  }
+
   const shipmentPath = `/staff/shipments/${encodeURIComponent(shipmentId)}`;
 
   switch (status) {
-    case ShipmentStatus.AWAITING_PACKAGE:
-      return {
-        title: "Réceptionner le colis",
-        description:
-          "La réception du colis sera disponible dans la prochaine étape opérationnelle.",
-      };
-    case ShipmentStatus.PACKAGE_RECEIVED_US:
-      return {
-        title: "Préparer la mise en devis",
-        description:
-          "Le colis a été reçu. Il doit maintenant être placé en attente de devis.",
-      };
     case ShipmentStatus.AWAITING_QUOTE:
       return {
         title: "Établir le devis",
@@ -68,28 +119,6 @@ export function getStaffShipmentWorkspaceAction(
         href: `${shipmentPath}/payment`,
         linkLabel: "Gérer le paiement",
       };
-    case ShipmentStatus.PAYMENT_CONFIRMED:
-      return {
-        title: "Paiement confirmé",
-        description: "L’envoi est prêt pour la prochaine étape de transport.",
-      };
-    case ShipmentStatus.IN_TRANSIT_TO_BF:
-      return {
-        title: "Transport en cours",
-        description: "L’envoi est actuellement en transit vers le Burkina Faso.",
-      };
-    case ShipmentStatus.ARRIVED_BF:
-      return {
-        title: "Préparer le retrait",
-        description:
-          "L’envoi est arrivé au Burkina Faso et doit être préparé pour son retrait.",
-      };
-    case ShipmentStatus.READY_FOR_PICKUP:
-      return {
-        title: "Colis prêt pour le retrait",
-        description:
-          "Le destinataire peut être contacté pour retirer le colis sur place.",
-      };
     case ShipmentStatus.DELIVERED:
       return {
         title: "Envoi terminé",
@@ -100,5 +129,7 @@ export function getStaffShipmentWorkspaceAction(
         title: "Envoi annulé",
         description: "Aucune autre opération ne doit être effectuée sur cet envoi.",
       };
+    default:
+      throw new Error("Unsupported staff shipment workspace status.");
   }
 }
