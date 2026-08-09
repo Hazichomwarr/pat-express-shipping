@@ -70,7 +70,7 @@ export default function Navbar({ language = "en" }: NavbarProps) {
             {copy.createShipment}
           </Link>
           <Link
-            href="/login"
+            href="/staff"
             className="rounded-md border border-blue-700 px-5 py-3 text-sm font-bold text-blue-700 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100"
           >
             {copy.login}
