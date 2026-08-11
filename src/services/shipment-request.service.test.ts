@@ -44,6 +44,7 @@ type ShipmentCreateData = {
 
 function validInput() {
   return {
+    direction: ShipmentDirection.US_TO_BF,
     intakeMethod: ShipmentIntakeMethod.DROP_OFF,
     senderName: "  Ada Sender  ",
     senderPhone: "  +1 (862) 555-0142  ",
@@ -202,16 +203,49 @@ test("generates tracking internally and relies on the initial schema status", as
   assert.equal(result.status, ShipmentStatus.AWAITING_PACKAGE);
 });
 
-test("always creates guest requests as US_TO_BF until intake captures direction", async () => {
-  const attempts: Prisma.ShipmentCreateArgs[] = [];
+for (const direction of [ShipmentDirection.US_TO_BF, ShipmentDirection.BF_TO_US]) {
+  test(`persists the validated ${direction} direction unchanged`, async () => {
+    const attempts: Prisma.ShipmentCreateArgs[] = [];
 
-  await createGuestShipmentRequest(
-    validInput(),
-    createSuccessfulDependencies(attempts),
-  );
+    await createGuestShipmentRequest(
+      { ...validInput(), direction },
+      createSuccessfulDependencies(attempts),
+    );
 
-  const data = attempts[0].data as ShipmentCreateData;
-  assert.equal(data.direction, ShipmentDirection.US_TO_BF);
+    const data = attempts[0].data as ShipmentCreateData;
+    assert.equal(data.direction, direction);
+  });
+}
+
+test("rejects a missing or invalid direction before side effects", async () => {
+  for (const invalidDirection of [undefined, "", "FR_TO_BF"]) {
+    let createCount = 0;
+    let generationCount = 0;
+    const input: Record<string, unknown> = { ...validInput() };
+
+    if (invalidDirection === undefined) {
+      delete input.direction;
+    } else {
+      input.direction = invalidDirection;
+    }
+
+    await assert.rejects(
+      createGuestShipmentRequest(input, {
+        generateTrackingNumber: () => {
+          generationCount += 1;
+          return FIRST_TRACKING_NUMBER;
+        },
+        createShipment: async () => {
+          createCount += 1;
+          throw new Error("should not create");
+        },
+      }),
+      ZodError,
+    );
+
+    assert.equal(generationCount, 0);
+    assert.equal(createCount, 0);
+  }
 });
 
 for (const serverControlledField of [

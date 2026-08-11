@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ShipmentDirection,
   ShipmentIntakeMethod,
   ShipmentItemCategory,
 } from "@prisma/client";
@@ -13,6 +14,7 @@ import {
 
 function validRequest() {
   return {
+    direction: ShipmentDirection.US_TO_BF,
     intakeMethod: ShipmentIntakeMethod.DROP_OFF,
     senderName: "Hamza Mare",
     senderPhone: "+1 (862) 555-0142",
@@ -45,6 +47,45 @@ test("parses valid DROP_OFF and MAIL_IN requests", () => {
       intakeMethod: ShipmentIntakeMethod.MAIL_IN,
     }).success,
     true,
+  );
+});
+
+test("parses both approved shipment directions", () => {
+  assert.equal(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      direction: ShipmentDirection.US_TO_BF,
+    }).success,
+    true,
+  );
+  assert.equal(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      direction: ShipmentDirection.BF_TO_US,
+    }).success,
+    true,
+  );
+});
+
+test("rejects a missing direction with the French field error", () => {
+  const requestWithoutDirection: Record<string, unknown> = {
+    ...validRequest(),
+  };
+  delete requestWithoutDirection.direction;
+
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse(requestWithoutDirection),
+    "Veuillez choisir le sens de l’envoi.",
+  );
+});
+
+test("rejects an invalid direction with the French field error", () => {
+  assertFirstErrorMessage(
+    createShipmentRequestInputSchema.safeParse({
+      ...validRequest(),
+      direction: "FR_TO_BF",
+    }),
+    "Veuillez choisir le sens de l’envoi.",
   );
 });
 

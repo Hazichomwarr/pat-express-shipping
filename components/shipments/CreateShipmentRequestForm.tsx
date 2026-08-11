@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import type { ShipmentDirection } from "@prisma/client";
 import {
+  ArrowRightLeft,
   Check,
   CheckCircle2,
   Clipboard,
@@ -16,9 +18,28 @@ import {
   createShipmentRequestAction,
   type CreateShipmentRequestActionState,
 } from "@/src/actions/create-shipment-request.action";
+import {
+  getShipmentDirectionDestinationLabel,
+  getShipmentDirectionLabel,
+  getShipmentDirectionOriginLabel,
+} from "@/src/services/_shared/shipment-direction-presentation";
 import ShipmentItemFields, {
   type ShipmentItemFormValues,
 } from "./ShipmentItemFields";
+
+const SHIPMENT_DIRECTION_OPTIONS: {
+  value: ShipmentDirection;
+  description: string;
+}[] = [
+  {
+    value: "US_TO_BF",
+    description: "Vous envoyez un colis depuis les États-Unis.",
+  },
+  {
+    value: "BF_TO_US",
+    description: "Vous envoyez un colis depuis le Burkina Faso.",
+  },
+];
 
 const INITIAL_ACTION_STATE: CreateShipmentRequestActionState = {
   status: "idle",
@@ -114,6 +135,7 @@ export default function CreateShipmentRequestForm() {
     createShipmentRequestAction,
     INITIAL_ACTION_STATE,
   );
+  const [direction, setDirection] = useState<ShipmentDirection | "">("");
   const [intakeMethod, setIntakeMethod] = useState<"DROP_OFF" | "MAIL_IN">(
     "DROP_OFF",
   );
@@ -266,7 +288,17 @@ export default function CreateShipmentRequestForm() {
             {copyFeedback}
           </p>
 
-          <div className="mt-7 grid gap-4 md:grid-cols-2">
+          <div className="mt-7 grid gap-4 md:grid-cols-3">
+            {direction ? (
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-slate-500">
+                  Sens de l’envoi
+                </p>
+                <p className="mt-2 font-bold text-slate-950">
+                  {getShipmentDirectionLabel(direction)}
+                </p>
+              </div>
+            ) : null}
             <div className="rounded-2xl bg-slate-50 p-5">
               <p className="text-sm font-semibold text-slate-500">
                 Statut actuel
@@ -331,6 +363,63 @@ export default function CreateShipmentRequestForm() {
         <section className="border-b border-slate-200 px-6 py-8 sm:px-10 sm:py-10">
           <SectionHeading
             number="1"
+            title="Sens de l’envoi"
+            description="Indiquez le pays de départ et le pays d’arrivée de votre colis."
+          />
+
+          <div
+            role="radiogroup"
+            aria-label="Sens de l’envoi"
+            aria-describedby={
+              fieldErrors.direction ? "direction-error" : undefined
+            }
+            className="mt-7 grid gap-4 md:grid-cols-2"
+          >
+            {SHIPMENT_DIRECTION_OPTIONS.map((option) => (
+              <label key={option.value} className="group relative cursor-pointer">
+                <input
+                  type="radio"
+                  name="direction"
+                  value={option.value}
+                  checked={direction === option.value}
+                  onChange={() => setDirection(option.value)}
+                  className="peer sr-only"
+                  aria-describedby={`direction-${option.value}-description`}
+                />
+                <span className="block h-full rounded-2xl border-2 border-slate-200 p-5 transition group-hover:border-blue-300 peer-checked:border-blue-700 peer-checked:bg-blue-50 peer-focus-visible:ring-4 peer-focus-visible:ring-blue-200">
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-3 text-lg font-black text-slate-950">
+                      <span className="rounded-xl bg-white p-2.5 text-blue-700 shadow-sm">
+                        <ArrowRightLeft aria-hidden="true" className="h-5 w-5" />
+                      </span>
+                      {getShipmentDirectionLabel(option.value)}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 text-white transition group-has-[:checked]:border-blue-700 group-has-[:checked]:bg-blue-700"
+                    >
+                      <Check
+                        aria-hidden="true"
+                        className="h-4 w-4 opacity-0 group-has-[:checked]:opacity-100"
+                      />
+                    </span>
+                  </span>
+                  <span
+                    id={`direction-${option.value}-description`}
+                    className="mt-3 block leading-7 text-slate-600"
+                  >
+                    {option.description}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <FieldError errors={fieldErrors.direction} id="direction-error" />
+        </section>
+
+        <section className="border-b border-slate-200 px-6 py-8 sm:px-10 sm:py-10">
+          <SectionHeading
+            number="2"
             title="Mode de dépôt"
             description="Choisissez comment votre colis arrivera chez PatExpressShipping."
           />
@@ -396,8 +485,12 @@ export default function CreateShipmentRequestForm() {
 
         <section className="border-b border-slate-200 px-6 py-8 sm:px-10 sm:py-10">
           <SectionHeading
-            number="2"
-            title="Informations de l’expéditeur"
+            number="3"
+            title={
+              direction
+                ? `Informations de l’expéditeur — ${getShipmentDirectionOriginLabel(direction)}`
+                : "Informations de l’expéditeur"
+            }
             description="Indiquez les coordonnées de la personne qui envoie et paiera le colis."
           />
           <div className="mt-7 grid gap-5 md:grid-cols-2">
@@ -457,9 +550,17 @@ export default function CreateShipmentRequestForm() {
 
         <section className="border-b border-slate-200 px-6 py-8 sm:px-10 sm:py-10">
           <SectionHeading
-            number="3"
-            title="Informations du destinataire"
-            description="Le destinataire sera contacté lorsque le colis sera prêt à être retiré au Burkina Faso."
+            number="4"
+            title={
+              direction
+                ? `Informations du destinataire — ${getShipmentDirectionDestinationLabel(direction)}`
+                : "Informations du destinataire"
+            }
+            description={
+              direction
+                ? `Le destinataire sera contacté lorsque le colis sera prêt à être retiré. Lieu de retrait : ${getShipmentDirectionDestinationLabel(direction)}.`
+                : "Le destinataire sera contacté lorsque le colis sera prêt à être retiré."
+            }
           />
           <div className="mt-7 grid gap-5 md:grid-cols-2">
             <div className="md:col-span-2">
@@ -553,7 +654,7 @@ export default function CreateShipmentRequestForm() {
 
         <section className="px-6 py-8 sm:px-10 sm:py-10">
           <SectionHeading
-            number="4"
+            number="5"
             title="Contenu du colis"
             description="Déclarez chaque type d’article présent dans votre colis. Vous pourrez en ajouter jusqu’à 50."
           />

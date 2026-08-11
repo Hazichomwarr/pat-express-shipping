@@ -113,6 +113,7 @@ function shipmentRequestFromFormData(formData: FormData) {
   });
 
   return {
+    direction: getFormValue(formData, "direction"),
     intakeMethod: getFormValue(formData, "intakeMethod"),
     senderName: getFormValue(formData, "senderName"),
     senderPhone: getFormValue(formData, "senderPhone"),

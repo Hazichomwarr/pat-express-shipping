@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   Prisma,
+  ShipmentDirection,
   ShipmentIntakeMethod,
   ShipmentItemCategory,
   ShipmentStatus,
@@ -31,6 +32,7 @@ function validFormData(
   intakeMethod: ShipmentIntakeMethod = ShipmentIntakeMethod.DROP_OFF,
 ) {
   const formData = new FormData();
+  formData.set("direction", ShipmentDirection.US_TO_BF);
   formData.set("intakeMethod", intakeMethod);
   formData.set("senderName", "Aminata Sawadogo");
   formData.set("senderPhone", "+1 (862) 555-0142");
@@ -73,6 +75,61 @@ test("passes a valid French DROP_OFF payload to the creation service", async () 
     (receivedInput as { intakeMethod: unknown }).intakeMethod,
     ShipmentIntakeMethod.DROP_OFF,
   );
+});
+
+for (const direction of [ShipmentDirection.US_TO_BF, ShipmentDirection.BF_TO_US]) {
+  test(`reaches the service with direction=${direction} unchanged`, async () => {
+    const formData = validFormData();
+    formData.set("direction", direction);
+    let receivedInput: unknown;
+
+    await runAction(formData, async (input) => {
+      receivedInput = input;
+      return SUCCESS_RESULT;
+    });
+
+    assert.equal((receivedInput as { direction: unknown }).direction, direction);
+  });
+}
+
+test("does not inject a direction default when the field is missing", async () => {
+  const formData = validFormData();
+  formData.delete("direction");
+  let receivedInput: unknown;
+
+  const state = await runAction(formData, async (input) => {
+    receivedInput = input;
+    createShipmentRequestInputSchema.parse(input);
+    return SUCCESS_RESULT;
+  });
+
+  assert.equal(
+    (receivedInput as { direction: unknown }).direction,
+    undefined,
+  );
+  assert.equal(state.status, "validation_error");
+  if (state.status === "validation_error") {
+    assert.deepEqual(state.fieldErrors.direction, [
+      "Veuillez choisir le sens de l’envoi.",
+    ]);
+  }
+});
+
+test("an invalid direction produces a French field error", async () => {
+  const formData = validFormData();
+  formData.set("direction", "FR_TO_BF");
+
+  const state = await runAction(formData, async (input) => {
+    createShipmentRequestInputSchema.parse(input);
+    return SUCCESS_RESULT;
+  });
+
+  assert.equal(state.status, "validation_error");
+  if (state.status === "validation_error") {
+    assert.deepEqual(state.fieldErrors.direction, [
+      "Veuillez choisir le sens de l’envoi.",
+    ]);
+  }
 });
 
 test("parses MAIL_IN without translating the persisted enum", async () => {

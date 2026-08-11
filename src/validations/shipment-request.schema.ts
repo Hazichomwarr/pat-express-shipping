@@ -1,4 +1,5 @@
 import {
+  ShipmentDirection,
   ShipmentIntakeMethod,
   ShipmentItemCategory,
 } from "@prisma/client";
@@ -92,6 +93,9 @@ export const shipmentItemInputSchema = z.strictObject(
 
 export const createShipmentRequestInputSchema = z.strictObject(
   {
+    direction: z.enum(ShipmentDirection, {
+      error: "Veuillez choisir le sens de l’envoi.",
+    }),
     intakeMethod: z.enum(ShipmentIntakeMethod, {
       error: "Choisissez un mode de dépôt valide.",
     }),

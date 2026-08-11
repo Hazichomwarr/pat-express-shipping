@@ -8,7 +8,7 @@ import CreateShipmentRequestForm from "@/components/shipments/CreateShipmentRequ
 export const metadata: Metadata = {
   title: "Créer un envoi | PatExpressShipping",
   description:
-    "Créez votre demande d’envoi des États-Unis vers le Burkina Faso et recevez votre numéro de suivi.",
+    "Créez votre demande d’envoi entre les États-Unis et le Burkina Faso et recevez votre numéro de suivi.",
 };
 
 const processSteps = [
@@ -43,7 +43,8 @@ export default function CreateShipmentPage() {
               Créer un envoi
             </p>
             <h1 className="mt-5 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-              Préparez votre prochain envoi vers le Burkina Faso
+              Préparez votre prochain envoi entre les États-Unis et le Burkina
+              Faso
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">
               Renseignez les informations de l’expéditeur, du destinataire et
