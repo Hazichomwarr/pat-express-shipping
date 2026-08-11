@@ -1,4 +1,5 @@
 import type {
+  ShipmentDirection,
   ShipmentItemCategory,
   ShipmentIntakeMethod,
   ShipmentPaymentMethod,
@@ -17,18 +18,52 @@ const shipmentItemCategoryLabels: Record<ShipmentItemCategory, string> = {
   OTHER: "Autre",
 };
 
-const shipmentStatusLabels: Record<ShipmentStatus, string> = {
+// PACKAGE_RECEIVED, IN_TRANSIT, and ARRIVED_DESTINATION describe a physical
+// event at a country that depends on ShipmentDirection, so they are excluded
+// here and resolved separately in getStaffShipmentStatusLabel.
+type DirectionNeutralShipmentStatus = Exclude<
+  ShipmentStatus,
+  "PACKAGE_RECEIVED" | "IN_TRANSIT" | "ARRIVED_DESTINATION"
+>;
+
+const directionNeutralStatusLabels: Record<
+  DirectionNeutralShipmentStatus,
+  string
+> = {
   AWAITING_PACKAGE: "En attente du colis",
-  PACKAGE_RECEIVED: "Colis reçu aux États-Unis",
   AWAITING_QUOTE: "En attente de devis",
   AWAITING_PAYMENT: "En attente de paiement",
   PAYMENT_CONFIRMED: "Paiement confirmé",
-  IN_TRANSIT: "En transit vers le Burkina Faso",
-  ARRIVED_DESTINATION: "Arrivé au Burkina Faso",
   READY_FOR_PICKUP: "Prêt pour le retrait",
   DELIVERED: "Livré",
   CANCELLED: "Annulé",
 };
+
+// Used only where no single shipment (and therefore no direction) is in
+// context, such as the staff status filter dropdown.
+const genericDirectionDependentStatusLabels: Record<
+  "PACKAGE_RECEIVED" | "IN_TRANSIT" | "ARRIVED_DESTINATION",
+  string
+> = {
+  PACKAGE_RECEIVED: "Colis reçu",
+  IN_TRANSIT: "En transit",
+  ARRIVED_DESTINATION: "Arrivé à destination",
+};
+
+const packageReceivedLabelsByDirection = {
+  US_TO_BF: "Colis reçu aux États-Unis",
+  BF_TO_US: "Colis reçu au Burkina Faso",
+} satisfies Record<ShipmentDirection, string>;
+
+const inTransitLabelsByDirection = {
+  US_TO_BF: "En transit vers le Burkina Faso",
+  BF_TO_US: "En transit vers les États-Unis",
+} satisfies Record<ShipmentDirection, string>;
+
+const arrivedDestinationLabelsByDirection = {
+  US_TO_BF: "Arrivé au Burkina Faso",
+  BF_TO_US: "Arrivé aux États-Unis",
+} satisfies Record<ShipmentDirection, string>;
 
 const shipmentIntakeMethodLabels: Record<ShipmentIntakeMethod, string> = {
   DROP_OFF: "Dépôt sur place",
@@ -46,8 +81,31 @@ const shipmentPaymentStatusLabels: Record<ShipmentPaymentStatus, string> = {
   CANCELLED: "Annulé",
 };
 
-export function getShipmentStatusLabel(status: ShipmentStatus): string {
-  return shipmentStatusLabels[status];
+export function getStaffShipmentStatusLabel(
+  status: ShipmentStatus,
+  direction: ShipmentDirection,
+): string {
+  switch (status) {
+    case "PACKAGE_RECEIVED":
+      return packageReceivedLabelsByDirection[direction];
+    case "IN_TRANSIT":
+      return inTransitLabelsByDirection[direction];
+    case "ARRIVED_DESTINATION":
+      return arrivedDestinationLabelsByDirection[direction];
+    default:
+      return directionNeutralStatusLabels[status];
+  }
+}
+
+export function getGenericShipmentStatusLabel(status: ShipmentStatus): string {
+  switch (status) {
+    case "PACKAGE_RECEIVED":
+    case "IN_TRANSIT":
+    case "ARRIVED_DESTINATION":
+      return genericDirectionDependentStatusLabels[status];
+    default:
+      return directionNeutralStatusLabels[status];
+  }
 }
 
 export function getShipmentItemCategoryLabel(

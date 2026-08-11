@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ShipmentDirection,
   ShipmentIntakeMethod,
   ShipmentItemCategory,
   ShipmentPaymentMethod,
@@ -10,12 +11,13 @@ import {
 } from "@prisma/client";
 
 import {
+  getGenericShipmentStatusLabel,
   getSafeStaffCallbackUrl,
   getShipmentItemCategoryLabel,
   getShipmentIntakeMethodLabel,
   getShipmentPaymentMethodLabel,
   getShipmentPaymentStatusLabel,
-  getShipmentStatusLabel,
+  getStaffShipmentStatusLabel,
 } from "./staff-ui";
 
 test("accepts only safe local staff callback paths", () => {
@@ -70,22 +72,95 @@ test("rejects external, protocol-relative, non-staff, and login callbacks", () =
   }
 });
 
-test("provides a French label for every shipment status", () => {
-  const expectedLabels: Record<ShipmentStatus, string> = {
+test("varies PACKAGE_RECEIVED, IN_TRANSIT, and ARRIVED_DESTINATION by direction", () => {
+  const expectedByDirection: Record<
+    ShipmentDirection,
+    Partial<Record<ShipmentStatus, string>>
+  > = {
+    US_TO_BF: {
+      PACKAGE_RECEIVED: "Colis reçu aux États-Unis",
+      IN_TRANSIT: "En transit vers le Burkina Faso",
+      ARRIVED_DESTINATION: "Arrivé au Burkina Faso",
+    },
+    BF_TO_US: {
+      PACKAGE_RECEIVED: "Colis reçu au Burkina Faso",
+      IN_TRANSIT: "En transit vers les États-Unis",
+      ARRIVED_DESTINATION: "Arrivé aux États-Unis",
+    },
+  };
+
+  for (const direction of Object.values(ShipmentDirection)) {
+    for (const [status, expectedLabel] of Object.entries(
+      expectedByDirection[direction],
+    ) as [ShipmentStatus, string][]) {
+      assert.equal(
+        getStaffShipmentStatusLabel(status, direction),
+        expectedLabel,
+      );
+    }
+  }
+});
+
+test("keeps direction-neutral statuses stable across both directions", () => {
+  const expectedNeutralLabels: Partial<Record<ShipmentStatus, string>> = {
     AWAITING_PACKAGE: "En attente du colis",
-    PACKAGE_RECEIVED: "Colis reçu aux États-Unis",
     AWAITING_QUOTE: "En attente de devis",
     AWAITING_PAYMENT: "En attente de paiement",
     PAYMENT_CONFIRMED: "Paiement confirmé",
-    IN_TRANSIT: "En transit vers le Burkina Faso",
-    ARRIVED_DESTINATION: "Arrivé au Burkina Faso",
+    READY_FOR_PICKUP: "Prêt pour le retrait",
+    DELIVERED: "Livré",
+    CANCELLED: "Annulé",
+  };
+
+  for (const [status, expectedLabel] of Object.entries(
+    expectedNeutralLabels,
+  ) as [ShipmentStatus, string][]) {
+    assert.equal(
+      getStaffShipmentStatusLabel(status, ShipmentDirection.US_TO_BF),
+      expectedLabel,
+    );
+    assert.equal(
+      getStaffShipmentStatusLabel(status, ShipmentDirection.BF_TO_US),
+      expectedLabel,
+    );
+  }
+});
+
+test("provides a generic direction-agnostic label for every shipment status", () => {
+  const expectedGenericLabels: Record<ShipmentStatus, string> = {
+    AWAITING_PACKAGE: "En attente du colis",
+    PACKAGE_RECEIVED: "Colis reçu",
+    AWAITING_QUOTE: "En attente de devis",
+    AWAITING_PAYMENT: "En attente de paiement",
+    PAYMENT_CONFIRMED: "Paiement confirmé",
+    IN_TRANSIT: "En transit",
+    ARRIVED_DESTINATION: "Arrivé à destination",
     READY_FOR_PICKUP: "Prêt pour le retrait",
     DELIVERED: "Livré",
     CANCELLED: "Annulé",
   };
 
   for (const status of Object.values(ShipmentStatus)) {
-    assert.equal(getShipmentStatusLabel(status), expectedLabels[status]);
+    assert.equal(
+      getGenericShipmentStatusLabel(status),
+      expectedGenericLabels[status],
+    );
+  }
+});
+
+test("never exposes a raw country name outside its owning direction", () => {
+  for (const status of Object.values(ShipmentStatus)) {
+    assert.equal(
+      getStaffShipmentStatusLabel(status, ShipmentDirection.US_TO_BF).includes(
+        "Burkina Faso",
+      ) &&
+        getStaffShipmentStatusLabel(
+          status,
+          ShipmentDirection.BF_TO_US,
+        ).includes("Burkina Faso"),
+      false,
+      `status ${status} should not mention Burkina Faso in both directions`,
+    );
   }
 });
 

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ShipmentStatus, type Prisma } from "@prisma/client";
+import {
+  ShipmentStatus,
+  type Prisma,
+  type ShipmentDirection,
+} from "@prisma/client";
 import {
   ArrowRight,
   FilterX,
@@ -16,9 +20,11 @@ import {
   StaffAuthenticationRequiredError,
 } from "@/src/services/_shared/require-staff";
 import { parseStaffShipmentListQuery } from "@/src/services/_shared/staff-shipment-list";
+import { getShipmentDirectionLabel } from "@/src/services/_shared/shipment-direction-presentation";
 import {
+  getGenericShipmentStatusLabel,
   getShipmentIntakeMethodLabel,
-  getShipmentStatusLabel,
+  getStaffShipmentStatusLabel,
 } from "@/src/services/_shared/staff-ui";
 
 export const metadata: Metadata = {
@@ -47,6 +53,7 @@ async function findStaffShipments(where: Prisma.ShipmentWhereInput) {
       id: true,
       trackingNumber: true,
       status: true,
+      direction: true,
       intakeMethod: true,
       senderName: true,
       recipientName: true,
@@ -65,10 +72,16 @@ async function findStaffShipments(where: Prisma.ShipmentWhereInput) {
 
 type StaffShipment = Awaited<ReturnType<typeof findStaffShipments>>[number];
 
-function ShipmentStatusBadge({ status }: { status: ShipmentStatus }) {
+function ShipmentStatusBadge({
+  status,
+  direction,
+}: {
+  status: ShipmentStatus;
+  direction: ShipmentDirection;
+}) {
   return (
     <span className="inline-flex w-fit rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-800 ring-1 ring-blue-200">
-      {getShipmentStatusLabel(status)}
+      {getStaffShipmentStatusLabel(status, direction)}
     </span>
   );
 }
@@ -83,13 +96,16 @@ function MobileShipmentCard({ shipment }: { shipment: StaffShipment }) {
         >
           {shipment.trackingNumber}
         </Link>
-        <ShipmentStatusBadge status={shipment.status} />
+        <ShipmentStatusBadge status={shipment.status} direction={shipment.direction} />
       </div>
       <dl className="mt-5 space-y-3 text-sm">
         <div>
           <dt className="font-semibold text-slate-500">Trajet</dt>
           <dd className="mt-1 font-bold text-slate-900">
             {shipment.senderName} → {shipment.recipientName}
+          </dd>
+          <dd className="mt-1 text-xs font-semibold text-slate-400">
+            {getShipmentDirectionLabel(shipment.direction)}
           </dd>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -207,7 +223,7 @@ export default async function StaffShipmentListPage({
                 <option value="">Tous les statuts</option>
                 {Object.values(ShipmentStatus).map((status) => (
                   <option key={status} value={status}>
-                    {getShipmentStatusLabel(status)}
+                    {getGenericShipmentStatusLabel(status)}
                   </option>
                 ))}
               </select>
@@ -286,8 +302,13 @@ export default async function StaffShipmentListPage({
                         <td className="px-5 py-5">
                           <p className="font-bold text-slate-900">{shipment.senderName}</p>
                           <p className="mt-1 text-sm text-slate-500">vers {shipment.recipientName}</p>
+                          <p className="mt-1 text-xs font-semibold text-slate-400">
+                            {getShipmentDirectionLabel(shipment.direction)}
+                          </p>
                         </td>
-                        <td className="px-5 py-5"><ShipmentStatusBadge status={shipment.status} /></td>
+                        <td className="px-5 py-5">
+                          <ShipmentStatusBadge status={shipment.status} direction={shipment.direction} />
+                        </td>
                         <td className="px-5 py-5 text-sm font-semibold text-slate-700">{getShipmentIntakeMethodLabel(shipment.intakeMethod)}</td>
                         <td className="px-5 py-5 text-sm font-semibold text-slate-700">{dateFormatter.format(shipment.createdAt)}</td>
                         <td className="px-5 py-5 text-right">

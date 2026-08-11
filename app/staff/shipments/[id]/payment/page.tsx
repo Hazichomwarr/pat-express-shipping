@@ -22,10 +22,11 @@ import {
   requireStaff,
   StaffAuthenticationRequiredError,
 } from "@/src/services/_shared/require-staff";
+import { getShipmentDirectionLabel } from "@/src/services/_shared/shipment-direction-presentation";
 import {
   getShipmentPaymentMethodLabel,
   getShipmentPaymentStatusLabel,
-  getShipmentStatusLabel,
+  getStaffShipmentStatusLabel,
 } from "@/src/services/_shared/staff-ui";
 
 export const metadata: Metadata = {
@@ -49,6 +50,7 @@ async function findShipmentForPayment(id: string) {
       id: true,
       trackingNumber: true,
       status: true,
+      direction: true,
       senderName: true,
       recipientName: true,
       recipientCity: true,
@@ -226,14 +228,15 @@ export default async function ShipmentPaymentPage({
         <section className="mt-9 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div><p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Résumé de l’envoi</p><h2 className="mt-2 break-all text-2xl font-black tracking-tight">{shipment.trackingNumber}</h2></div>
-            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 ring-1 ring-blue-200"><Clock3 aria-hidden="true" className="h-4 w-4" />{getShipmentStatusLabel(shipment.status)}</span>
+            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 ring-1 ring-blue-200"><Clock3 aria-hidden="true" className="h-4 w-4" />{getStaffShipmentStatusLabel(shipment.status, shipment.direction)}</span>
           </div>
           <dl className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <SummaryItem label="Numéro de suivi" value={shipment.trackingNumber} />
+            <SummaryItem label="Sens de l’envoi" value={getShipmentDirectionLabel(shipment.direction)} />
             <SummaryItem label="Expéditeur" value={shipment.senderName} />
             <SummaryItem label="Destinataire" value={shipment.recipientName} />
             <SummaryItem label="Ville de retrait" value={shipment.recipientCity} />
-            <SummaryItem label="Statut de l’envoi" value={getShipmentStatusLabel(shipment.status)} />
+            <SummaryItem label="Statut de l’envoi" value={getStaffShipmentStatusLabel(shipment.status, shipment.direction)} />
           </dl>
         </section>
 
@@ -277,7 +280,7 @@ export default async function ShipmentPaymentPage({
             ) : mayCreatePayment ? (
               <ShipmentPaymentForm shipmentId={shipment.id} amount={completeQuote.quotedAmount.toString()} currency={completeQuote.quoteCurrency} loginUrl={loginUrl} />
             ) : (
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8"><h2 className="text-2xl font-black tracking-tight">Aucune action disponible</h2><p className="mt-3 leading-7 text-slate-600">Cet envoi est au statut « {getShipmentStatusLabel(shipment.status)} ». Un paiement ne peut être enregistré que lorsqu’il est en attente de paiement.</p></section>
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8"><h2 className="text-2xl font-black tracking-tight">Aucune action disponible</h2><p className="mt-3 leading-7 text-slate-600">Cet envoi est au statut « {getStaffShipmentStatusLabel(shipment.status, shipment.direction)} ». Un paiement ne peut être enregistré que lorsqu’il est en attente de paiement.</p></section>
             )}
           </div>
 

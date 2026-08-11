@@ -10,9 +10,10 @@ import {
   requireStaff,
   StaffAuthenticationRequiredError,
 } from "@/src/services/_shared/require-staff";
+import { getShipmentDirectionLabel } from "@/src/services/_shared/shipment-direction-presentation";
 import {
   getShipmentIntakeMethodLabel,
-  getShipmentStatusLabel,
+  getStaffShipmentStatusLabel,
 } from "@/src/services/_shared/staff-ui";
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ async function findShipmentForQuotation(id: string) {
       id: true,
       trackingNumber: true,
       status: true,
+      direction: true,
       senderName: true,
       recipientName: true,
       recipientCity: true,
@@ -154,12 +156,13 @@ export default async function ShipmentQuotationPage({
             </div>
             <span className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-800 ring-1 ring-blue-200">
               <Clock3 aria-hidden="true" className="h-4 w-4" />
-              {getShipmentStatusLabel(shipment.status)}
+              {getStaffShipmentStatusLabel(shipment.status, shipment.direction)}
             </span>
           </div>
 
           <dl className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SummaryItem label="Numéro de suivi" value={shipment.trackingNumber} />
+            <SummaryItem label="Sens de l’envoi" value={getShipmentDirectionLabel(shipment.direction)} />
             <SummaryItem label="Expéditeur" value={shipment.senderName} />
             <SummaryItem label="Destinataire" value={shipment.recipientName} />
             <SummaryItem label="Ville de retrait" value={shipment.recipientCity} />
@@ -217,7 +220,7 @@ export default async function ShipmentQuotationPage({
                 Cet envoi ne peut pas être facturé maintenant
               </h2>
               <p className="mt-3 max-w-3xl leading-7 text-slate-700">
-                L’envoi <strong>{shipment.trackingNumber}</strong> est actuellement au statut « {getShipmentStatusLabel(shipment.status)} ». Le devis ne devient disponible que lorsque l’envoi attend officiellement sa facturation.
+                L’envoi <strong>{shipment.trackingNumber}</strong> est actuellement au statut « {getStaffShipmentStatusLabel(shipment.status, shipment.direction)} ». Le devis ne devient disponible que lorsque l’envoi attend officiellement sa facturation.
               </p>
             </section>
           )}

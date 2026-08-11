@@ -27,11 +27,16 @@ import {
   getStaffShipmentWorkspaceAction,
 } from "@/src/services/_shared/staff-shipment-workspace";
 import {
+  getShipmentDirectionDestinationLabel,
+  getShipmentDirectionLabel,
+  getShipmentDirectionOriginLabel,
+} from "@/src/services/_shared/shipment-direction-presentation";
+import {
   getShipmentIntakeMethodLabel,
   getShipmentItemCategoryLabel,
   getShipmentPaymentMethodLabel,
   getShipmentPaymentStatusLabel,
-  getShipmentStatusLabel,
+  getStaffShipmentStatusLabel,
 } from "@/src/services/_shared/staff-ui";
 
 export const metadata: Metadata = {
@@ -55,6 +60,7 @@ async function findShipmentWorkspace(id: string) {
       id: true,
       trackingNumber: true,
       status: true,
+      direction: true,
       intakeMethod: true,
       createdAt: true,
       updatedAt: true,
@@ -267,16 +273,28 @@ export default async function StaffShipmentWorkspacePage({
   const shipment = await findShipmentWorkspace(id);
   if (!shipment) notFound();
 
-  const nextAction = getStaffShipmentWorkspaceAction(shipment.status, shipment.id);
-  const operationalAction =
-    getStaffShipmentStatusActionPresentation(shipment.status);
+  const nextAction = getStaffShipmentWorkspaceAction(
+    shipment.status,
+    shipment.direction,
+    shipment.id,
+  );
+  const operationalAction = getStaffShipmentStatusActionPresentation(
+    shipment.status,
+    shipment.direction,
+  );
   const loginUrl = `/staff/login?callbackUrl=${encodeURIComponent(workspacePath)}`;
   const milestones = [
     { label: "Demande créée", date: shipment.createdAt },
-    { label: "Colis reçu aux États-Unis", date: shipment.packageReceivedAt },
+    {
+      label: getStaffShipmentStatusLabel("PACKAGE_RECEIVED", shipment.direction),
+      date: shipment.packageReceivedAt,
+    },
     { label: "Devis enregistré", date: shipment.quotedAt },
     { label: "Paiement confirmé", date: shipment.paymentConfirmedAt },
-    { label: "Arrivé au Burkina Faso", date: shipment.arrivedDestinationAt },
+    {
+      label: getStaffShipmentStatusLabel("ARRIVED_DESTINATION", shipment.direction),
+      date: shipment.arrivedDestinationAt,
+    },
     { label: "Prêt pour le retrait", date: shipment.readyForPickupAt },
     { label: "Livré", date: shipment.deliveredAt },
     { label: "Annulé", date: shipment.cancelledAt },
@@ -300,9 +318,14 @@ export default async function StaffShipmentWorkspacePage({
                 Envoi {shipment.trackingNumber}
               </h1>
             </div>
-            <span className="inline-flex w-fit rounded-full bg-blue-400/15 px-4 py-2 text-sm font-bold text-blue-100 ring-1 ring-blue-300/30">
-              {getShipmentStatusLabel(shipment.status)}
-            </span>
+            <div className="flex flex-col items-start gap-2 lg:items-end">
+              <span className="inline-flex w-fit rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-slate-100 ring-1 ring-white/20">
+                {getShipmentDirectionLabel(shipment.direction)}
+              </span>
+              <span className="inline-flex w-fit rounded-full bg-blue-400/15 px-4 py-2 text-sm font-bold text-blue-100 ring-1 ring-blue-300/30">
+                {getStaffShipmentStatusLabel(shipment.status, shipment.direction)}
+              </span>
+            </div>
           </div>
           <dl className="mt-7 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-3">
             <div><dt className="text-sm font-semibold text-slate-400">Mode de dépôt</dt><dd className="mt-1 font-bold">{getShipmentIntakeMethodLabel(shipment.intakeMethod)}</dd></div>
@@ -332,20 +355,27 @@ export default async function StaffShipmentWorkspacePage({
         </section>
 
         <div className="mt-7 grid gap-7 lg:grid-cols-2">
-          <ContactCard title="Expéditeur">
+          <ContactCard
+            title={`Expéditeur — ${getShipmentDirectionOriginLabel(shipment.direction)}`}
+          >
             <Detail label="Nom" value={shipment.senderName} />
             <Detail label="Téléphone" value={shipment.senderPhone} />
             <Detail label="Adresse e-mail" value={shipment.senderEmail} />
           </ContactCard>
-          <ContactCard title="Destinataire">
+          <ContactCard
+            title={`Destinataire — ${getShipmentDirectionDestinationLabel(shipment.direction)}`}
+          >
             <Detail label="Nom" value={shipment.recipientName} />
             <Detail label="Téléphone" value={shipment.recipientPhone} />
             {shipment.recipientEmail ? <Detail label="Adresse e-mail" value={shipment.recipientEmail} /> : null}
-            <Detail label="Ville de retrait" value={shipment.recipientCity} />
+            <Detail
+              label={`Ville de retrait — ${getShipmentDirectionDestinationLabel(shipment.direction)}`}
+              value={shipment.recipientCity}
+            />
             {shipment.recipientNotes ? <Detail label="Instructions" value={shipment.recipientNotes} /> : null}
             <div className="sm:col-span-2 flex items-start gap-2 rounded-xl bg-blue-50 p-3 text-sm text-blue-900">
               <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
-              Retrait local au Burkina Faso — aucune adresse de livraison à domicile n’est associée à cet envoi.
+              Retrait local {shipment.direction === "US_TO_BF" ? "au Burkina Faso" : "aux États-Unis"} — aucune adresse de livraison à domicile n’est associée à cet envoi.
             </div>
           </ContactCard>
         </div>
