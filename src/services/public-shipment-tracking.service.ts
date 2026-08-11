@@ -1,12 +1,14 @@
 import "server-only";
 
-import { Prisma, ShipmentStatus } from "@prisma/client";
+import { Prisma, ShipmentDirection, ShipmentStatus } from "@prisma/client";
 
 import { isShipmentTrackingNumber } from "./_shared/shipment-tracking-number";
 import { isTerminalShipmentStatus } from "./_shared/shipment-status-transition";
+import { getShipmentDirectionLabel } from "./_shared/shipment-direction-presentation";
 
 const publicShipmentTrackingSelect = {
   trackingNumber: true,
+  direction: true,
   status: true,
   createdAt: true,
   packageReceivedAt: true,
@@ -40,17 +42,26 @@ type PublicShipmentStatusPresentation = {
   description: string;
 };
 
-const PUBLIC_SHIPMENT_STATUS_PRESENTATIONS: Record<
+// PACKAGE_RECEIVED, IN_TRANSIT, ARRIVED_DESTINATION, READY_FOR_PICKUP, and
+// DELIVERED describe a physical event whose geography depends on
+// ShipmentDirection, so they are resolved separately below instead of living
+// in this direction-neutral map.
+type DirectionNeutralPublicStatus = Exclude<
   ShipmentStatus,
+  | "PACKAGE_RECEIVED"
+  | "IN_TRANSIT"
+  | "ARRIVED_DESTINATION"
+  | "READY_FOR_PICKUP"
+  | "DELIVERED"
+>;
+
+const directionNeutralPublicPresentations: Record<
+  DirectionNeutralPublicStatus,
   PublicShipmentStatusPresentation
 > = {
   AWAITING_PACKAGE: {
     label: "En attente de réception du colis",
     description: "PatExpressShipping attend de recevoir votre colis.",
-  },
-  PACKAGE_RECEIVED: {
-    label: "Colis reçu aux États-Unis",
-    description: "Votre colis a bien été reçu aux États-Unis.",
   },
   AWAITING_QUOTE: {
     label: "Préparation du devis",
@@ -66,27 +77,86 @@ const PUBLIC_SHIPMENT_STATUS_PRESENTATIONS: Record<
     description:
       "Le paiement a été confirmé. L’envoi peut poursuivre son traitement.",
   },
-  IN_TRANSIT: {
-    label: "En transit vers le Burkina Faso",
-    description: "Votre colis est en route vers le Burkina Faso.",
-  },
-  ARRIVED_DESTINATION: {
-    label: "Arrivé au Burkina Faso",
-    description: "Votre colis est arrivé au Burkina Faso.",
-  },
-  READY_FOR_PICKUP: {
-    label: "Prêt pour le retrait",
-    description: "Votre colis est prêt à être retiré.",
-  },
-  DELIVERED: {
-    label: "Livré",
-    description: "Votre colis a été remis au destinataire.",
-  },
   CANCELLED: {
     label: "Annulé",
     description: "Cet envoi a été annulé.",
   },
 };
+
+const packageReceivedPresentationsByDirection = {
+  US_TO_BF: {
+    label: "Colis reçu aux États-Unis",
+    description: "Votre colis a bien été reçu aux États-Unis.",
+  },
+  BF_TO_US: {
+    label: "Colis reçu au Burkina Faso",
+    description: "Votre colis a bien été reçu au Burkina Faso.",
+  },
+} satisfies Record<ShipmentDirection, PublicShipmentStatusPresentation>;
+
+const inTransitPresentationsByDirection = {
+  US_TO_BF: {
+    label: "En transit vers le Burkina Faso",
+    description: "Votre colis est en route vers le Burkina Faso.",
+  },
+  BF_TO_US: {
+    label: "En transit vers les États-Unis",
+    description: "Votre colis est en route vers les États-Unis.",
+  },
+} satisfies Record<ShipmentDirection, PublicShipmentStatusPresentation>;
+
+const arrivedDestinationPresentationsByDirection = {
+  US_TO_BF: {
+    label: "Arrivé au Burkina Faso",
+    description: "Votre colis est arrivé au Burkina Faso.",
+  },
+  BF_TO_US: {
+    label: "Arrivé aux États-Unis",
+    description: "Votre colis est arrivé aux États-Unis.",
+  },
+} satisfies Record<ShipmentDirection, PublicShipmentStatusPresentation>;
+
+const readyForPickupPresentationsByDirection = {
+  US_TO_BF: {
+    label: "Prêt pour le retrait",
+    description: "Votre colis est prêt à être retiré au Burkina Faso.",
+  },
+  BF_TO_US: {
+    label: "Prêt pour le retrait",
+    description: "Votre colis est prêt à être retiré aux États-Unis.",
+  },
+} satisfies Record<ShipmentDirection, PublicShipmentStatusPresentation>;
+
+const deliveredPresentationsByDirection = {
+  US_TO_BF: {
+    label: "Livré",
+    description: "Votre colis a été remis au Burkina Faso.",
+  },
+  BF_TO_US: {
+    label: "Livré",
+    description: "Votre colis a été remis aux États-Unis.",
+  },
+} satisfies Record<ShipmentDirection, PublicShipmentStatusPresentation>;
+
+function getPublicShipmentStatusPresentation(
+  status: ShipmentStatus,
+  direction: ShipmentDirection,
+): PublicShipmentStatusPresentation {
+  switch (status) {
+    case "PACKAGE_RECEIVED":
+      return packageReceivedPresentationsByDirection[direction];
+    case "IN_TRANSIT":
+      return inTransitPresentationsByDirection[direction];
+    case "ARRIVED_DESTINATION":
+      return arrivedDestinationPresentationsByDirection[direction];
+    case "READY_FOR_PICKUP":
+      return readyForPickupPresentationsByDirection[direction];
+    case "DELIVERED":
+      return deliveredPresentationsByDirection[direction];
+    default:
+      return directionNeutralPublicPresentations[status];
+  }
+}
 
 export type PublicShipmentTrackingMilestone = {
   key:
@@ -104,6 +174,8 @@ export type PublicShipmentTrackingMilestone = {
 
 export type PublicShipmentTrackingResult = {
   trackingNumber: string;
+  direction: ShipmentDirection;
+  directionLabel: string;
   status: ShipmentStatus;
   statusLabel: string;
   statusDescription: string;
@@ -158,7 +230,10 @@ function buildPublicMilestones(
     },
     {
       key: "package_received" as const,
-      label: "Colis reçu aux États-Unis",
+      label: getPublicShipmentStatusPresentation(
+        "PACKAGE_RECEIVED",
+        shipment.direction,
+      ).label,
       occurredAt: shipment.packageReceivedAt,
     },
     {
@@ -173,7 +248,10 @@ function buildPublicMilestones(
     },
     {
       key: "arrived_destination" as const,
-      label: "Arrivé au Burkina Faso",
+      label: getPublicShipmentStatusPresentation(
+        "ARRIVED_DESTINATION",
+        shipment.direction,
+      ).label,
       occurredAt: shipment.arrivedDestinationAt,
     },
     {
@@ -216,10 +294,15 @@ export async function getPublicShipmentTracking(
     throw new PublicShipmentNotFoundError();
   }
 
-  const presentation = PUBLIC_SHIPMENT_STATUS_PRESENTATIONS[shipment.status];
+  const presentation = getPublicShipmentStatusPresentation(
+    shipment.status,
+    shipment.direction,
+  );
 
   return {
     trackingNumber: shipment.trackingNumber,
+    direction: shipment.direction,
+    directionLabel: getShipmentDirectionLabel(shipment.direction),
     status: shipment.status,
     statusLabel: presentation.label,
     statusDescription: presentation.description,

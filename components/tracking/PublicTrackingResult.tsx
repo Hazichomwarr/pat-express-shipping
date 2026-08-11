@@ -58,6 +58,12 @@ export default function PublicTrackingResult({
         >
           {result.trackingNumber}
         </h2>
+        <p className="mt-5 text-sm font-bold text-slate-500">
+          Sens de l’envoi
+        </p>
+        <p className="mt-1 break-words text-lg font-black tracking-tight text-slate-950">
+          {result.directionLabel}
+        </p>
       </div>
 
       <div

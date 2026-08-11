@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ShipmentStatus } from "@prisma/client";
+import { ShipmentDirection, ShipmentStatus } from "@prisma/client";
 
 import { isShipmentTrackingNumber } from "./_shared/shipment-tracking-number";
 import {
@@ -26,6 +26,7 @@ const milestoneDates = {
 function shipmentFixture(
   overrides: Partial<{
     trackingNumber: string;
+    direction: ShipmentDirection;
     status: ShipmentStatus;
     createdAt: Date;
     packageReceivedAt: Date | null;
@@ -39,6 +40,7 @@ function shipmentFixture(
 ) {
   return {
     trackingNumber,
+    direction: ShipmentDirection.US_TO_BF,
     status: ShipmentStatus.IN_TRANSIT,
     ...milestoneDates,
     ...overrides,
@@ -73,6 +75,7 @@ test("normalizes a valid tracking number and performs a focused lookup", async (
       where: { trackingNumber },
       select: {
         trackingNumber: true,
+        direction: true,
         status: true,
         createdAt: true,
         packageReceivedAt: true,
@@ -153,18 +156,13 @@ test("rethrows unrelated database errors", async () => {
   );
 });
 
-test("returns customer-facing French status presentations for every status", async () => {
-  const expectedPresentations: Record<
-    ShipmentStatus,
-    { label: string; description: string }
+test("returns direction-neutral French status presentations for direction-neutral statuses", async () => {
+  const expectedPresentations: Partial<
+    Record<ShipmentStatus, { label: string; description: string }>
   > = {
     AWAITING_PACKAGE: {
       label: "En attente de réception du colis",
       description: "PatExpressShipping attend de recevoir votre colis.",
-    },
-    PACKAGE_RECEIVED: {
-      label: "Colis reçu aux États-Unis",
-      description: "Votre colis a bien été reçu aux États-Unis.",
     },
     AWAITING_QUOTE: {
       label: "Préparation du devis",
@@ -181,43 +179,171 @@ test("returns customer-facing French status presentations for every status", asy
       description:
         "Le paiement a été confirmé. L’envoi peut poursuivre son traitement.",
     },
-    IN_TRANSIT: {
-      label: "En transit vers le Burkina Faso",
-      description: "Votre colis est en route vers le Burkina Faso.",
-    },
-    ARRIVED_DESTINATION: {
-      label: "Arrivé au Burkina Faso",
-      description: "Votre colis est arrivé au Burkina Faso.",
-    },
-    READY_FOR_PICKUP: {
-      label: "Prêt pour le retrait",
-      description: "Votre colis est prêt à être retiré.",
-    },
-    DELIVERED: {
-      label: "Livré",
-      description: "Votre colis a été remis au destinataire.",
-    },
     CANCELLED: {
       label: "Annulé",
       description: "Cet envoi a été annulé.",
     },
   };
 
-  for (const status of Object.values(ShipmentStatus)) {
+  for (const [status, expected] of Object.entries(expectedPresentations) as [
+    ShipmentStatus,
+    { label: string; description: string },
+  ][]) {
+    for (const direction of Object.values(ShipmentDirection)) {
+      const { dependencies } = dependenciesReturning(
+        shipmentFixture({ status, direction }),
+      );
+      const result = await getPublicShipmentTracking(
+        trackingNumber,
+        dependencies,
+      );
+
+      assert.equal(result.status, status);
+      assert.equal(result.statusLabel, expected.label);
+      assert.equal(result.statusDescription, expected.description);
+    }
+  }
+});
+
+test("varies PACKAGE_RECEIVED, IN_TRANSIT, and ARRIVED_DESTINATION presentation by direction", async () => {
+  const expectedByDirection: Record<
+    ShipmentDirection,
+    Partial<Record<ShipmentStatus, { label: string; description: string }>>
+  > = {
+    US_TO_BF: {
+      PACKAGE_RECEIVED: {
+        label: "Colis reçu aux États-Unis",
+        description: "Votre colis a bien été reçu aux États-Unis.",
+      },
+      IN_TRANSIT: {
+        label: "En transit vers le Burkina Faso",
+        description: "Votre colis est en route vers le Burkina Faso.",
+      },
+      ARRIVED_DESTINATION: {
+        label: "Arrivé au Burkina Faso",
+        description: "Votre colis est arrivé au Burkina Faso.",
+      },
+    },
+    BF_TO_US: {
+      PACKAGE_RECEIVED: {
+        label: "Colis reçu au Burkina Faso",
+        description: "Votre colis a bien été reçu au Burkina Faso.",
+      },
+      IN_TRANSIT: {
+        label: "En transit vers les États-Unis",
+        description: "Votre colis est en route vers les États-Unis.",
+      },
+      ARRIVED_DESTINATION: {
+        label: "Arrivé aux États-Unis",
+        description: "Votre colis est arrivé aux États-Unis.",
+      },
+    },
+  };
+
+  for (const direction of Object.values(ShipmentDirection)) {
+    for (const [status, expected] of Object.entries(
+      expectedByDirection[direction],
+    ) as [ShipmentStatus, { label: string; description: string }][]) {
+      const { dependencies } = dependenciesReturning(
+        shipmentFixture({ status, direction }),
+      );
+      const result = await getPublicShipmentTracking(
+        trackingNumber,
+        dependencies,
+      );
+
+      assert.equal(result.statusLabel, expected.label);
+      assert.equal(result.statusDescription, expected.description);
+    }
+  }
+});
+
+test("references the correct destination for READY_FOR_PICKUP and DELIVERED", async () => {
+  const expectedByDirection: Record<
+    ShipmentDirection,
+    Partial<Record<ShipmentStatus, string>>
+  > = {
+    US_TO_BF: {
+      READY_FOR_PICKUP: "Votre colis est prêt à être retiré au Burkina Faso.",
+      DELIVERED: "Votre colis a été remis au Burkina Faso.",
+    },
+    BF_TO_US: {
+      READY_FOR_PICKUP: "Votre colis est prêt à être retiré aux États-Unis.",
+      DELIVERED: "Votre colis a été remis aux États-Unis.",
+    },
+  };
+
+  for (const direction of Object.values(ShipmentDirection)) {
+    for (const [status, expectedDescription] of Object.entries(
+      expectedByDirection[direction],
+    ) as [ShipmentStatus, string][]) {
+      const { dependencies } = dependenciesReturning(
+        shipmentFixture({ status, direction }),
+      );
+      const result = await getPublicShipmentTracking(
+        trackingNumber,
+        dependencies,
+      );
+
+      assert.equal(result.statusLabel, status === "DELIVERED" ? "Livré" : "Prêt pour le retrait");
+      assert.equal(result.statusDescription, expectedDescription);
+    }
+  }
+});
+
+test("never mentions the same country for both directions of a geography-dependent status", async () => {
+  for (const status of [
+    "PACKAGE_RECEIVED",
+    "IN_TRANSIT",
+    "ARRIVED_DESTINATION",
+    "READY_FOR_PICKUP",
+    "DELIVERED",
+  ] as const) {
+    const { dependencies: usToBfDeps } = dependenciesReturning(
+      shipmentFixture({ status, direction: ShipmentDirection.US_TO_BF }),
+    );
+    const { dependencies: bfToUsDeps } = dependenciesReturning(
+      shipmentFixture({ status, direction: ShipmentDirection.BF_TO_US }),
+    );
+    const usToBfResult = await getPublicShipmentTracking(
+      trackingNumber,
+      usToBfDeps,
+    );
+    const bfToUsResult = await getPublicShipmentTracking(
+      trackingNumber,
+      bfToUsDeps,
+    );
+
+    const usToBfMentionsBurkina =
+      usToBfResult.statusDescription.includes("Burkina Faso");
+    const bfToUsMentionsBurkina =
+      bfToUsResult.statusDescription.includes("Burkina Faso");
+
+    assert.equal(
+      usToBfMentionsBurkina && bfToUsMentionsBurkina,
+      false,
+      `${status} should not mention Burkina Faso for both directions`,
+    );
+  }
+});
+
+test("returns the persisted direction and its French route label", async () => {
+  const expectedLabels: Record<ShipmentDirection, string> = {
+    US_TO_BF: "États-Unis → Burkina Faso",
+    BF_TO_US: "Burkina Faso → États-Unis",
+  };
+
+  for (const direction of Object.values(ShipmentDirection)) {
     const { dependencies } = dependenciesReturning(
-      shipmentFixture({ status }),
+      shipmentFixture({ direction }),
     );
     const result = await getPublicShipmentTracking(
       trackingNumber,
       dependencies,
     );
 
-    assert.equal(result.status, status);
-    assert.equal(result.statusLabel, expectedPresentations[status].label);
-    assert.equal(
-      result.statusDescription,
-      expectedPresentations[status].description,
-    );
+    assert.equal(result.direction, direction);
+    assert.equal(result.directionLabel, expectedLabels[direction]);
   }
 });
 
@@ -239,7 +365,9 @@ test("uses the shipment terminal policy for active, delivered, and cancelled sta
 });
 
 test("builds milestones from persisted dates in deterministic business order", async () => {
-  const { dependencies } = dependenciesReturning(shipmentFixture());
+  const { dependencies } = dependenciesReturning(
+    shipmentFixture({ direction: ShipmentDirection.US_TO_BF }),
+  );
 
   const result = await getPublicShipmentTracking(trackingNumber, dependencies);
 
@@ -285,6 +413,24 @@ test("builds milestones from persisted dates in deterministic business order", a
       occurredAt: milestoneDates.cancelledAt,
     },
   ]);
+});
+
+test("uses BF_TO_US wording for the package-received and arrival milestones", async () => {
+  const { dependencies } = dependenciesReturning(
+    shipmentFixture({ direction: ShipmentDirection.BF_TO_US }),
+  );
+
+  const result = await getPublicShipmentTracking(trackingNumber, dependencies);
+
+  const packageReceivedMilestone = result.milestones.find(
+    (milestone) => milestone.key === "package_received",
+  );
+  const arrivedMilestone = result.milestones.find(
+    (milestone) => milestone.key === "arrived_destination",
+  );
+
+  assert.equal(packageReceivedMilestone?.label, "Colis reçu au Burkina Faso");
+  assert.equal(arrivedMilestone?.label, "Arrivé aux États-Unis");
 });
 
 test("omits null milestones without fabricating transit or updated events", async () => {
@@ -339,6 +485,8 @@ test("returns only the approved public tracking shape", async () => {
   const result = await getPublicShipmentTracking(trackingNumber, dependencies);
 
   assert.deepEqual(Object.keys(result).sort(), [
+    "direction",
+    "directionLabel",
     "isTerminal",
     "milestones",
     "status",
