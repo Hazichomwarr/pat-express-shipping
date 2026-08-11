@@ -26,14 +26,14 @@ const SUCCESS_RESULT: AdvanceShipmentStatusResult = {
   id: SHIPMENT_ID,
   trackingNumber: "PAT-2026-ABCDEFGH",
   previousStatus: ShipmentStatus.AWAITING_PACKAGE,
-  status: ShipmentStatus.PACKAGE_RECEIVED_US,
+  status: ShipmentStatus.PACKAGE_RECEIVED,
   milestoneAt: MILESTONE_AT,
 };
 
 function validFormData() {
   const formData = new FormData();
   formData.set("shipmentId", SHIPMENT_ID);
-  formData.set("toStatus", ShipmentStatus.PACKAGE_RECEIVED_US);
+  formData.set("toStatus", ShipmentStatus.PACKAGE_RECEIVED);
 
   return formData;
 }
@@ -214,7 +214,7 @@ test("ignores caller-supplied lifecycle timestamps, from status, and staff ID", 
   formData.set("fromStatus", ShipmentStatus.DELIVERED);
   formData.set("packageReceivedAt", "2020-01-01T00:00:00.000Z");
   formData.set("paymentConfirmedAt", "2020-01-01T00:00:00.000Z");
-  formData.set("arrivedBfAt", "2020-01-01T00:00:00.000Z");
+  formData.set("arrivedDestinationAt", "2020-01-01T00:00:00.000Z");
   formData.set("readyForPickupAt", "2020-01-01T00:00:00.000Z");
   formData.set("deliveredAt", "2020-01-01T00:00:00.000Z");
   formData.set("cancelledAt", "2020-01-01T00:00:00.000Z");
@@ -228,7 +228,7 @@ test("ignores caller-supplied lifecycle timestamps, from status, and staff ID", 
 
   assert.deepEqual(receivedArguments, [
     SHIPMENT_ID,
-    ShipmentStatus.PACKAGE_RECEIVED_US,
+    ShipmentStatus.PACKAGE_RECEIVED,
   ]);
 });
 
@@ -248,7 +248,7 @@ test("returns only approved fields and serializes a milestone timestamp", async 
       id: SHIPMENT_ID,
       trackingNumber: "PAT-2026-ABCDEFGH",
       previousStatus: ShipmentStatus.AWAITING_PACKAGE,
-      status: ShipmentStatus.PACKAGE_RECEIVED_US,
+      status: ShipmentStatus.PACKAGE_RECEIVED,
       milestoneAt: "2026-08-08T20:15:00.000Z",
     },
   });

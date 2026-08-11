@@ -5,11 +5,11 @@ import { canTransitionShipmentStatus } from "./shipment-status-transition";
 const STAFF_SHIPMENT_TRANSITIONS: Readonly<
   Partial<Record<ShipmentStatus, ShipmentStatus>>
 > = {
-  [ShipmentStatus.AWAITING_PACKAGE]: ShipmentStatus.PACKAGE_RECEIVED_US,
-  [ShipmentStatus.PACKAGE_RECEIVED_US]: ShipmentStatus.AWAITING_QUOTE,
-  [ShipmentStatus.PAYMENT_CONFIRMED]: ShipmentStatus.IN_TRANSIT_TO_BF,
-  [ShipmentStatus.IN_TRANSIT_TO_BF]: ShipmentStatus.ARRIVED_BF,
-  [ShipmentStatus.ARRIVED_BF]: ShipmentStatus.READY_FOR_PICKUP,
+  [ShipmentStatus.AWAITING_PACKAGE]: ShipmentStatus.PACKAGE_RECEIVED,
+  [ShipmentStatus.PACKAGE_RECEIVED]: ShipmentStatus.AWAITING_QUOTE,
+  [ShipmentStatus.PAYMENT_CONFIRMED]: ShipmentStatus.IN_TRANSIT,
+  [ShipmentStatus.IN_TRANSIT]: ShipmentStatus.ARRIVED_DESTINATION,
+  [ShipmentStatus.ARRIVED_DESTINATION]: ShipmentStatus.READY_FOR_PICKUP,
   [ShipmentStatus.READY_FOR_PICKUP]: ShipmentStatus.DELIVERED,
 };
 

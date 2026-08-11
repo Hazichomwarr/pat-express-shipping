@@ -17,7 +17,7 @@ const milestoneDates = {
   packageReceivedAt: new Date("2026-08-12T13:00:00.000Z"),
   quotedAt: new Date("2026-08-11T13:00:00.000Z"),
   paymentConfirmedAt: new Date("2026-08-13T13:00:00.000Z"),
-  arrivedBfAt: new Date("2026-08-18T13:00:00.000Z"),
+  arrivedDestinationAt: new Date("2026-08-18T13:00:00.000Z"),
   readyForPickupAt: new Date("2026-08-19T13:00:00.000Z"),
   deliveredAt: new Date("2026-08-20T13:00:00.000Z"),
   cancelledAt: new Date("2026-08-09T13:00:00.000Z"),
@@ -31,7 +31,7 @@ function shipmentFixture(
     packageReceivedAt: Date | null;
     quotedAt: Date | null;
     paymentConfirmedAt: Date | null;
-    arrivedBfAt: Date | null;
+    arrivedDestinationAt: Date | null;
     readyForPickupAt: Date | null;
     deliveredAt: Date | null;
     cancelledAt: Date | null;
@@ -39,7 +39,7 @@ function shipmentFixture(
 ) {
   return {
     trackingNumber,
-    status: ShipmentStatus.IN_TRANSIT_TO_BF,
+    status: ShipmentStatus.IN_TRANSIT,
     ...milestoneDates,
     ...overrides,
   };
@@ -78,7 +78,7 @@ test("normalizes a valid tracking number and performs a focused lookup", async (
         packageReceivedAt: true,
         quotedAt: true,
         paymentConfirmedAt: true,
-        arrivedBfAt: true,
+        arrivedDestinationAt: true,
         readyForPickupAt: true,
         deliveredAt: true,
         cancelledAt: true,
@@ -162,7 +162,7 @@ test("returns customer-facing French status presentations for every status", asy
       label: "En attente de réception du colis",
       description: "PatExpressShipping attend de recevoir votre colis.",
     },
-    PACKAGE_RECEIVED_US: {
+    PACKAGE_RECEIVED: {
       label: "Colis reçu aux États-Unis",
       description: "Votre colis a bien été reçu aux États-Unis.",
     },
@@ -181,11 +181,11 @@ test("returns customer-facing French status presentations for every status", asy
       description:
         "Le paiement a été confirmé. L’envoi peut poursuivre son traitement.",
     },
-    IN_TRANSIT_TO_BF: {
+    IN_TRANSIT: {
       label: "En transit vers le Burkina Faso",
       description: "Votre colis est en route vers le Burkina Faso.",
     },
-    ARRIVED_BF: {
+    ARRIVED_DESTINATION: {
       label: "Arrivé au Burkina Faso",
       description: "Votre colis est arrivé au Burkina Faso.",
     },
@@ -250,7 +250,7 @@ test("builds milestones from persisted dates in deterministic business order", a
       occurredAt: milestoneDates.createdAt,
     },
     {
-      key: "package_received_us",
+      key: "package_received",
       label: "Colis reçu aux États-Unis",
       occurredAt: milestoneDates.packageReceivedAt,
     },
@@ -265,9 +265,9 @@ test("builds milestones from persisted dates in deterministic business order", a
       occurredAt: milestoneDates.paymentConfirmedAt,
     },
     {
-      key: "arrived_bf",
+      key: "arrived_destination",
       label: "Arrivé au Burkina Faso",
-      occurredAt: milestoneDates.arrivedBfAt,
+      occurredAt: milestoneDates.arrivedDestinationAt,
     },
     {
       key: "ready_for_pickup",
@@ -293,7 +293,7 @@ test("omits null milestones without fabricating transit or updated events", asyn
       packageReceivedAt: null,
       quotedAt: null,
       paymentConfirmedAt: null,
-      arrivedBfAt: null,
+      arrivedDestinationAt: null,
       readyForPickupAt: null,
       deliveredAt: null,
       cancelledAt: null,

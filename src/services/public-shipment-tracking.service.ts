@@ -12,7 +12,7 @@ const publicShipmentTrackingSelect = {
   packageReceivedAt: true,
   quotedAt: true,
   paymentConfirmedAt: true,
-  arrivedBfAt: true,
+  arrivedDestinationAt: true,
   readyForPickupAt: true,
   deliveredAt: true,
   cancelledAt: true,
@@ -48,7 +48,7 @@ const PUBLIC_SHIPMENT_STATUS_PRESENTATIONS: Record<
     label: "En attente de réception du colis",
     description: "PatExpressShipping attend de recevoir votre colis.",
   },
-  PACKAGE_RECEIVED_US: {
+  PACKAGE_RECEIVED: {
     label: "Colis reçu aux États-Unis",
     description: "Votre colis a bien été reçu aux États-Unis.",
   },
@@ -66,11 +66,11 @@ const PUBLIC_SHIPMENT_STATUS_PRESENTATIONS: Record<
     description:
       "Le paiement a été confirmé. L’envoi peut poursuivre son traitement.",
   },
-  IN_TRANSIT_TO_BF: {
+  IN_TRANSIT: {
     label: "En transit vers le Burkina Faso",
     description: "Votre colis est en route vers le Burkina Faso.",
   },
-  ARRIVED_BF: {
+  ARRIVED_DESTINATION: {
     label: "Arrivé au Burkina Faso",
     description: "Votre colis est arrivé au Burkina Faso.",
   },
@@ -91,10 +91,10 @@ const PUBLIC_SHIPMENT_STATUS_PRESENTATIONS: Record<
 export type PublicShipmentTrackingMilestone = {
   key:
     | "created"
-    | "package_received_us"
+    | "package_received"
     | "quoted"
     | "payment_confirmed"
-    | "arrived_bf"
+    | "arrived_destination"
     | "ready_for_pickup"
     | "delivered"
     | "cancelled";
@@ -157,7 +157,7 @@ function buildPublicMilestones(
       occurredAt: shipment.createdAt,
     },
     {
-      key: "package_received_us" as const,
+      key: "package_received" as const,
       label: "Colis reçu aux États-Unis",
       occurredAt: shipment.packageReceivedAt,
     },
@@ -172,9 +172,9 @@ function buildPublicMilestones(
       occurredAt: shipment.paymentConfirmedAt,
     },
     {
-      key: "arrived_bf" as const,
+      key: "arrived_destination" as const,
       label: "Arrivé au Burkina Faso",
-      occurredAt: shipment.arrivedBfAt,
+      occurredAt: shipment.arrivedDestinationAt,
     },
     {
       key: "ready_for_pickup" as const,

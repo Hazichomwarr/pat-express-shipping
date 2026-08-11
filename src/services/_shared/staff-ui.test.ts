@@ -73,12 +73,12 @@ test("rejects external, protocol-relative, non-staff, and login callbacks", () =
 test("provides a French label for every shipment status", () => {
   const expectedLabels: Record<ShipmentStatus, string> = {
     AWAITING_PACKAGE: "En attente du colis",
-    PACKAGE_RECEIVED_US: "Colis reçu aux États-Unis",
+    PACKAGE_RECEIVED: "Colis reçu aux États-Unis",
     AWAITING_QUOTE: "En attente de devis",
     AWAITING_PAYMENT: "En attente de paiement",
     PAYMENT_CONFIRMED: "Paiement confirmé",
-    IN_TRANSIT_TO_BF: "En transit vers le Burkina Faso",
-    ARRIVED_BF: "Arrivé au Burkina Faso",
+    IN_TRANSIT: "En transit vers le Burkina Faso",
+    ARRIVED_DESTINATION: "Arrivé au Burkina Faso",
     READY_FOR_PICKUP: "Prêt pour le retrait",
     DELIVERED: "Livré",
     CANCELLED: "Annulé",

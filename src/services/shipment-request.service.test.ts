@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   Prisma,
+  ShipmentDirection,
   ShipmentIntakeMethod,
   ShipmentItemCategory,
   ShipmentStatus,
@@ -27,6 +28,7 @@ type NestedItem = {
 
 type ShipmentCreateData = {
   trackingNumber: string;
+  direction: ShipmentDirection;
   intakeMethod: ShipmentIntakeMethod;
   senderName: string;
   senderPhone: string;
@@ -198,6 +200,18 @@ test("generates tracking internally and relies on the initial schema status", as
   assert.equal(data.trackingNumber, FIRST_TRACKING_NUMBER);
   assert.equal(data.status, undefined);
   assert.equal(result.status, ShipmentStatus.AWAITING_PACKAGE);
+});
+
+test("always creates guest requests as US_TO_BF until intake captures direction", async () => {
+  const attempts: Prisma.ShipmentCreateArgs[] = [];
+
+  await createGuestShipmentRequest(
+    validInput(),
+    createSuccessfulDependencies(attempts),
+  );
+
+  const data = attempts[0].data as ShipmentCreateData;
+  assert.equal(data.direction, ShipmentDirection.US_TO_BF);
 });
 
 for (const serverControlledField of [

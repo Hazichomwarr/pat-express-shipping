@@ -11,7 +11,7 @@ const shipmentStatusSelect = {
   status: true,
   packageReceivedAt: true,
   paymentConfirmedAt: true,
-  arrivedBfAt: true,
+  arrivedDestinationAt: true,
   readyForPickupAt: true,
   deliveredAt: true,
   cancelledAt: true,
@@ -97,7 +97,7 @@ function requireConsistentHistoricalState(
   }
 
   switch (toStatus) {
-    case ShipmentStatus.PACKAGE_RECEIVED_US:
+    case ShipmentStatus.PACKAGE_RECEIVED:
       if (shipment.packageReceivedAt !== null) {
         throw new ShipmentStatusStateInconsistentError();
       }
@@ -107,19 +107,19 @@ function requireConsistentHistoricalState(
         throw new ShipmentStatusStateInconsistentError();
       }
       break;
-    case ShipmentStatus.IN_TRANSIT_TO_BF:
+    case ShipmentStatus.IN_TRANSIT:
       if (shipment.paymentConfirmedAt === null) {
         throw new ShipmentStatusStateInconsistentError();
       }
       break;
-    case ShipmentStatus.ARRIVED_BF:
-      if (shipment.arrivedBfAt !== null) {
+    case ShipmentStatus.ARRIVED_DESTINATION:
+      if (shipment.arrivedDestinationAt !== null) {
         throw new ShipmentStatusStateInconsistentError();
       }
       break;
     case ShipmentStatus.READY_FOR_PICKUP:
       if (
-        shipment.arrivedBfAt === null ||
+        shipment.arrivedDestinationAt === null ||
         shipment.readyForPickupAt !== null
       ) {
         throw new ShipmentStatusStateInconsistentError();
@@ -150,7 +150,7 @@ function createTransitionPlan(
   };
 
   switch (toStatus) {
-    case ShipmentStatus.PACKAGE_RECEIVED_US: {
+    case ShipmentStatus.PACKAGE_RECEIVED: {
       const milestoneAt = now();
       return {
         where: { ...baseWhere, packageReceivedAt: null },
@@ -164,17 +164,17 @@ function createTransitionPlan(
         data: { status: toStatus },
         milestoneAt: null,
       };
-    case ShipmentStatus.IN_TRANSIT_TO_BF:
+    case ShipmentStatus.IN_TRANSIT:
       return {
         where: { ...baseWhere, paymentConfirmedAt: { not: null } },
         data: { status: toStatus },
         milestoneAt: null,
       };
-    case ShipmentStatus.ARRIVED_BF: {
+    case ShipmentStatus.ARRIVED_DESTINATION: {
       const milestoneAt = now();
       return {
-        where: { ...baseWhere, arrivedBfAt: null },
-        data: { status: toStatus, arrivedBfAt: milestoneAt },
+        where: { ...baseWhere, arrivedDestinationAt: null },
+        data: { status: toStatus, arrivedDestinationAt: milestoneAt },
         milestoneAt,
       };
     }
@@ -183,7 +183,7 @@ function createTransitionPlan(
       return {
         where: {
           ...baseWhere,
-          arrivedBfAt: { not: null },
+          arrivedDestinationAt: { not: null },
           readyForPickupAt: null,
         },
         data: { status: toStatus, readyForPickupAt: milestoneAt },

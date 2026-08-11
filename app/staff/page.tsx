@@ -55,7 +55,7 @@ async function findStaffShipments(where: Prisma.ShipmentWhereInput) {
       packageReceivedAt: true,
       quotedAt: true,
       paymentConfirmedAt: true,
-      arrivedBfAt: true,
+      arrivedDestinationAt: true,
       readyForPickupAt: true,
       deliveredAt: true,
       cancelledAt: true,

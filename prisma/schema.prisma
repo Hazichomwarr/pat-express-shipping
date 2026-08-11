@@ -11,17 +11,30 @@ datasource db {
   provider = "postgresql"
 }
 
+// Geography-neutral shipment lifecycle. What happened, not where. Combine with
+// ShipmentDirection to derive geography (e.g. US_TO_BF + PACKAGE_RECEIVED means
+// received at the U.S. origin; BF_TO_US + PACKAGE_RECEIVED means received at the
+// Burkina Faso origin).
 enum ShipmentStatus {
   AWAITING_PACKAGE
-  PACKAGE_RECEIVED_US
+  PACKAGE_RECEIVED
   AWAITING_QUOTE
   AWAITING_PAYMENT
   PAYMENT_CONFIRMED
-  IN_TRANSIT_TO_BF
-  ARRIVED_BF
+  IN_TRANSIT
+  ARRIVED_DESTINATION
   READY_FOR_PICKUP
   DELIVERED
   CANCELLED
+}
+
+// US_TO_BF: origin United States, destination Burkina Faso.
+// BF_TO_US: origin Burkina Faso, destination United States.
+// Direction is the authoritative route classification; ShipmentStatus never
+// encodes geography itself.
+enum ShipmentDirection {
+  US_TO_BF
+  BF_TO_US
 }
 
 enum ShipmentIntakeMethod {
@@ -64,6 +77,7 @@ model Shipment {
   id             String               @id @default(cuid())
   trackingNumber String               @unique
   status         ShipmentStatus       @default(AWAITING_PACKAGE)
+  direction      ShipmentDirection
   intakeMethod   ShipmentIntakeMethod
 
   senderName  String
@@ -86,12 +100,12 @@ model Shipment {
   quoteCurrency    ShipmentQuoteCurrency?
   quotedAt         DateTime?
 
-  packageReceivedAt  DateTime?
-  paymentConfirmedAt DateTime?
-  arrivedBfAt        DateTime?
-  readyForPickupAt   DateTime?
-  deliveredAt        DateTime?
-  cancelledAt        DateTime?
+  packageReceivedAt    DateTime?
+  paymentConfirmedAt   DateTime?
+  arrivedDestinationAt DateTime?
+  readyForPickupAt     DateTime?
+  deliveredAt          DateTime?
+  cancelledAt          DateTime?
 
   items    ShipmentItem[]
   payments ShipmentPayment[]

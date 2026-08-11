@@ -28,29 +28,29 @@ const staffShipmentStatusActions: Readonly<
   Partial<Record<ShipmentStatus, StaffShipmentStatusActionPresentation>>
 > = {
   [ShipmentStatus.AWAITING_PACKAGE]: {
-    toStatus: ShipmentStatus.PACKAGE_RECEIVED_US,
+    toStatus: ShipmentStatus.PACKAGE_RECEIVED,
     label: "Réceptionner le colis",
     description:
       "Confirme que le colis a été physiquement reçu aux États-Unis.",
   },
-  [ShipmentStatus.PACKAGE_RECEIVED_US]: {
+  [ShipmentStatus.PACKAGE_RECEIVED]: {
     toStatus: ShipmentStatus.AWAITING_QUOTE,
     label: "Mettre en attente de devis",
     description: "Le colis reçu est prêt à être pesé et facturé.",
   },
   [ShipmentStatus.PAYMENT_CONFIRMED]: {
-    toStatus: ShipmentStatus.IN_TRANSIT_TO_BF,
+    toStatus: ShipmentStatus.IN_TRANSIT,
     label: "Marquer en transit vers le Burkina Faso",
     description:
       "Confirme que l’envoi a quitté l’étape de paiement et est maintenant en transit.",
   },
-  [ShipmentStatus.IN_TRANSIT_TO_BF]: {
-    toStatus: ShipmentStatus.ARRIVED_BF,
+  [ShipmentStatus.IN_TRANSIT]: {
+    toStatus: ShipmentStatus.ARRIVED_DESTINATION,
     label: "Marquer arrivé au Burkina Faso",
     description:
       "Confirme l’arrivée physique de l’envoi au Burkina Faso.",
   },
-  [ShipmentStatus.ARRIVED_BF]: {
+  [ShipmentStatus.ARRIVED_DESTINATION]: {
     toStatus: ShipmentStatus.READY_FOR_PICKUP,
     label: "Marquer prêt pour le retrait",
     description:

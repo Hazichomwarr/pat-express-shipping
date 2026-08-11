@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Prisma, type ShipmentStatus } from "@prisma/client";
+import { Prisma, ShipmentDirection, type ShipmentStatus } from "@prisma/client";
 
 import { generateShipmentTrackingNumber } from "./_shared/shipment-tracking-number";
 import { createShipmentRequestInputSchema } from "../validations/shipment-request.schema";
@@ -121,6 +121,9 @@ export async function createGuestShipmentRequest(
       const shipment = await dependencies.createShipment({
         data: {
           trackingNumber,
+          // Guest requests do not yet capture direction (Ticket 6B); every
+          // shipment the current intake flow creates is US_TO_BF.
+          direction: ShipmentDirection.US_TO_BF,
           intakeMethod: validatedInput.intakeMethod,
           senderName: validatedInput.senderName,
           senderPhone: validatedInput.senderPhone,

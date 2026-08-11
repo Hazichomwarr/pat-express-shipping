@@ -21,7 +21,7 @@ function shipment(
     status: ShipmentStatus;
     packageReceivedAt: Date | null;
     paymentConfirmedAt: Date | null;
-    arrivedBfAt: Date | null;
+    arrivedDestinationAt: Date | null;
     readyForPickupAt: Date | null;
     deliveredAt: Date | null;
     cancelledAt: Date | null;
@@ -33,7 +33,7 @@ function shipment(
     status: ShipmentStatus.AWAITING_PACKAGE,
     packageReceivedAt: null,
     paymentConfirmedAt: null,
-    arrivedBfAt: null,
+    arrivedDestinationAt: null,
     readyForPickupAt: null,
     deliveredAt: null,
     cancelledAt: null,
@@ -70,7 +70,7 @@ test("throws a specific error when the shipment is missing", async () => {
   await assert.rejects(
     advanceShipmentStatus(
       "missing",
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       dependencies(null),
     ),
     ShipmentNotFoundError,
@@ -88,7 +88,7 @@ test("rejects transitions not owned by generic staff advancement", async () => {
       ShipmentStatus.PAYMENT_CONFIRMED,
     ],
     [shipment(), ShipmentStatus.CANCELLED],
-    [shipment(), ShipmentStatus.ARRIVED_BF],
+    [shipment(), ShipmentStatus.ARRIVED_DESTINATION],
   ] as const) {
     await assert.rejects(
       advanceShipmentStatus("shipment_1", toStatus, dependencies(record)),
@@ -103,7 +103,7 @@ test("receives a package with one server-generated milestone", async () => {
 
   const result = await advanceShipmentStatus(
     "shipment_1",
-    ShipmentStatus.PACKAGE_RECEIVED_US,
+    ShipmentStatus.PACKAGE_RECEIVED,
     dependencies(shipment(), {
       onUpdate: (args) => {
         updateArgs = args;
@@ -123,7 +123,7 @@ test("receives a package with one server-generated milestone", async () => {
       packageReceivedAt: null,
     },
     data: {
-      status: ShipmentStatus.PACKAGE_RECEIVED_US,
+      status: ShipmentStatus.PACKAGE_RECEIVED,
       packageReceivedAt: milestone,
     },
   });
@@ -131,7 +131,7 @@ test("receives a package with one server-generated milestone", async () => {
     id: "shipment_1",
     trackingNumber: "PAT-2026-ABCDEFGH",
     previousStatus: ShipmentStatus.AWAITING_PACKAGE,
-    status: ShipmentStatus.PACKAGE_RECEIVED_US,
+    status: ShipmentStatus.PACKAGE_RECEIVED,
     milestoneAt: milestone,
   });
 });
@@ -140,7 +140,7 @@ test("does not overwrite an existing package receipt timestamp", async () => {
   await assert.rejects(
     advanceShipmentStatus(
       "shipment_1",
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       dependencies(shipment({ packageReceivedAt: earlier })),
     ),
     ShipmentStatusStateInconsistentError,
@@ -152,7 +152,7 @@ test("moving to awaiting quote requires receipt and creates no timestamp", async
     advanceShipmentStatus(
       "shipment_1",
       ShipmentStatus.AWAITING_QUOTE,
-      dependencies(shipment({ status: ShipmentStatus.PACKAGE_RECEIVED_US })),
+      dependencies(shipment({ status: ShipmentStatus.PACKAGE_RECEIVED })),
     ),
     ShipmentStatusStateInconsistentError,
   );
@@ -164,7 +164,7 @@ test("moving to awaiting quote requires receipt and creates no timestamp", async
     ShipmentStatus.AWAITING_QUOTE,
     dependencies(
       shipment({
-        status: ShipmentStatus.PACKAGE_RECEIVED_US,
+        status: ShipmentStatus.PACKAGE_RECEIVED,
         packageReceivedAt: earlier,
       }),
       {
@@ -183,7 +183,7 @@ test("moving to awaiting quote requires receipt and creates no timestamp", async
   assert.deepEqual(updateArgs, {
     where: {
       id: "shipment_1",
-      status: ShipmentStatus.PACKAGE_RECEIVED_US,
+      status: ShipmentStatus.PACKAGE_RECEIVED,
       cancelledAt: null,
       packageReceivedAt: { not: null },
     },
@@ -197,7 +197,7 @@ test("starting transit requires payment confirmation and creates no timestamp", 
   await assert.rejects(
     advanceShipmentStatus(
       current.id,
-      ShipmentStatus.IN_TRANSIT_TO_BF,
+      ShipmentStatus.IN_TRANSIT,
       dependencies(current),
     ),
     ShipmentStatusStateInconsistentError,
@@ -207,7 +207,7 @@ test("starting transit requires payment confirmation and creates no timestamp", 
   let updateArgs: Prisma.ShipmentUpdateManyArgs | undefined;
   const result = await advanceShipmentStatus(
     current.id,
-    ShipmentStatus.IN_TRANSIT_TO_BF,
+    ShipmentStatus.IN_TRANSIT,
     dependencies(
       shipment({
         status: ShipmentStatus.PAYMENT_CONFIRMED,
@@ -234,12 +234,12 @@ test("starting transit requires payment confirmation and creates no timestamp", 
   });
 });
 
-test("arrival records arrivedBfAt and protects an existing timestamp", async () => {
+test("arrival records arrivedDestinationAt and protects an existing timestamp", async () => {
   let updateArgs: Prisma.ShipmentUpdateManyArgs | undefined;
   const result = await advanceShipmentStatus(
     "shipment_1",
-    ShipmentStatus.ARRIVED_BF,
-    dependencies(shipment({ status: ShipmentStatus.IN_TRANSIT_TO_BF }), {
+    ShipmentStatus.ARRIVED_DESTINATION,
+    dependencies(shipment({ status: ShipmentStatus.IN_TRANSIT }), {
       onUpdate: (args) => {
         updateArgs = args;
       },
@@ -248,22 +248,22 @@ test("arrival records arrivedBfAt and protects an existing timestamp", async () 
 
   assert.equal(result.milestoneAt, milestone);
   assert.deepEqual(updateArgs?.data, {
-    status: ShipmentStatus.ARRIVED_BF,
-    arrivedBfAt: milestone,
+    status: ShipmentStatus.ARRIVED_DESTINATION,
+    arrivedDestinationAt: milestone,
   });
   assert.equal(
-    (updateArgs?.where as Prisma.ShipmentWhereInput).arrivedBfAt,
+    (updateArgs?.where as Prisma.ShipmentWhereInput).arrivedDestinationAt,
     null,
   );
 
   await assert.rejects(
     advanceShipmentStatus(
       "shipment_1",
-      ShipmentStatus.ARRIVED_BF,
+      ShipmentStatus.ARRIVED_DESTINATION,
       dependencies(
         shipment({
-          status: ShipmentStatus.IN_TRANSIT_TO_BF,
-          arrivedBfAt: earlier,
+          status: ShipmentStatus.IN_TRANSIT,
+          arrivedDestinationAt: earlier,
         }),
       ),
     ),
@@ -276,7 +276,7 @@ test("ready for pickup requires arrival and stores its milestone", async () => {
     advanceShipmentStatus(
       "shipment_1",
       ShipmentStatus.READY_FOR_PICKUP,
-      dependencies(shipment({ status: ShipmentStatus.ARRIVED_BF })),
+      dependencies(shipment({ status: ShipmentStatus.ARRIVED_DESTINATION })),
     ),
     ShipmentStatusStateInconsistentError,
   );
@@ -286,7 +286,7 @@ test("ready for pickup requires arrival and stores its milestone", async () => {
     "shipment_1",
     ShipmentStatus.READY_FOR_PICKUP,
     dependencies(
-      shipment({ status: ShipmentStatus.ARRIVED_BF, arrivedBfAt: earlier }),
+      shipment({ status: ShipmentStatus.ARRIVED_DESTINATION, arrivedDestinationAt: earlier }),
       {
         onUpdate: (args) => {
           updateArgs = args;
@@ -302,9 +302,9 @@ test("ready for pickup requires arrival and stores its milestone", async () => {
   });
   assert.deepEqual(updateArgs?.where, {
     id: "shipment_1",
-    status: ShipmentStatus.ARRIVED_BF,
+    status: ShipmentStatus.ARRIVED_DESTINATION,
     cancelledAt: null,
-    arrivedBfAt: { not: null },
+    arrivedDestinationAt: { not: null },
     readyForPickupAt: null,
   });
 });
@@ -316,8 +316,8 @@ test("ready for pickup does not overwrite an existing timestamp", async () => {
       ShipmentStatus.READY_FOR_PICKUP,
       dependencies(
         shipment({
-          status: ShipmentStatus.ARRIVED_BF,
-          arrivedBfAt: earlier,
+          status: ShipmentStatus.ARRIVED_DESTINATION,
+          arrivedDestinationAt: earlier,
           readyForPickupAt: earlier,
         }),
       ),
@@ -388,7 +388,7 @@ test("an unexpected cancellation milestone blocks active advancement", async () 
   await assert.rejects(
     advanceShipmentStatus(
       "shipment_1",
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       dependencies(shipment({ cancelledAt: earlier })),
     ),
     ShipmentStatusStateInconsistentError,
@@ -401,7 +401,7 @@ test("a zero-row conditional update reports conflict without retry", async () =>
   await assert.rejects(
     advanceShipmentStatus(
       "shipment_1",
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       dependencies(shipment(), {
         updateCount: 0,
         onUpdate: () => {
@@ -421,7 +421,7 @@ test("rethrows unrelated database errors without retrying", async () => {
   await assert.rejects(
     advanceShipmentStatus(
       "shipment_1",
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       dependencies(shipment(), {
         updateError: databaseError,
         onUpdate: () => {

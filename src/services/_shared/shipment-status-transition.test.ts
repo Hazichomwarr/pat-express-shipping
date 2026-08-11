@@ -10,22 +10,50 @@ import {
 } from "./shipment-status-transition";
 
 const APPROVED_FORWARD_TRANSITIONS = [
-  [ShipmentStatus.AWAITING_PACKAGE, ShipmentStatus.PACKAGE_RECEIVED_US],
-  [ShipmentStatus.PACKAGE_RECEIVED_US, ShipmentStatus.AWAITING_QUOTE],
+  [ShipmentStatus.AWAITING_PACKAGE, ShipmentStatus.PACKAGE_RECEIVED],
+  [ShipmentStatus.PACKAGE_RECEIVED, ShipmentStatus.AWAITING_QUOTE],
   [ShipmentStatus.AWAITING_QUOTE, ShipmentStatus.AWAITING_PAYMENT],
   [ShipmentStatus.AWAITING_PAYMENT, ShipmentStatus.PAYMENT_CONFIRMED],
-  [ShipmentStatus.PAYMENT_CONFIRMED, ShipmentStatus.IN_TRANSIT_TO_BF],
-  [ShipmentStatus.IN_TRANSIT_TO_BF, ShipmentStatus.ARRIVED_BF],
-  [ShipmentStatus.ARRIVED_BF, ShipmentStatus.READY_FOR_PICKUP],
+  [ShipmentStatus.PAYMENT_CONFIRMED, ShipmentStatus.IN_TRANSIT],
+  [ShipmentStatus.IN_TRANSIT, ShipmentStatus.ARRIVED_DESTINATION],
+  [ShipmentStatus.ARRIVED_DESTINATION, ShipmentStatus.READY_FOR_PICKUP],
   [ShipmentStatus.READY_FOR_PICKUP, ShipmentStatus.DELIVERED],
 ] as const;
 
 const CANCELLABLE_STATUSES = [
   ShipmentStatus.AWAITING_PACKAGE,
-  ShipmentStatus.PACKAGE_RECEIVED_US,
+  ShipmentStatus.PACKAGE_RECEIVED,
   ShipmentStatus.AWAITING_QUOTE,
   ShipmentStatus.AWAITING_PAYMENT,
 ] as const;
+
+test("uses exactly the geography-neutral lifecycle vocabulary", () => {
+  assert.deepEqual(Object.values(ShipmentStatus).sort(), [
+    "ARRIVED_DESTINATION",
+    "AWAITING_PACKAGE",
+    "AWAITING_PAYMENT",
+    "AWAITING_QUOTE",
+    "CANCELLED",
+    "DELIVERED",
+    "IN_TRANSIT",
+    "PACKAGE_RECEIVED",
+    "PAYMENT_CONFIRMED",
+    "READY_FOR_PICKUP",
+  ]);
+
+  for (const removedGeographySpecificStatus of [
+    "PACKAGE_RECEIVED_US",
+    "IN_TRANSIT_TO_BF",
+    "ARRIVED_BF",
+  ]) {
+    assert.equal(
+      Object.values(ShipmentStatus).includes(
+        removedGeographySpecificStatus as ShipmentStatus,
+      ),
+      false,
+    );
+  }
+});
 
 test("accepts every approved direct forward transition", () => {
   for (const [from, to] of APPROVED_FORWARD_TRANSITIONS) {
@@ -45,8 +73,8 @@ test("accepts cancellation from every approved pre-payment status", () => {
 test("rejects cancellation after payment confirmation", () => {
   for (const status of [
     ShipmentStatus.PAYMENT_CONFIRMED,
-    ShipmentStatus.IN_TRANSIT_TO_BF,
-    ShipmentStatus.ARRIVED_BF,
+    ShipmentStatus.IN_TRANSIT,
+    ShipmentStatus.ARRIVED_DESTINATION,
     ShipmentStatus.READY_FOR_PICKUP,
     ShipmentStatus.DELIVERED,
     ShipmentStatus.CANCELLED,
@@ -69,13 +97,13 @@ test("rejects skipped intermediate statuses", () => {
   assert.equal(
     canTransitionShipmentStatus(
       ShipmentStatus.AWAITING_PAYMENT,
-      ShipmentStatus.IN_TRANSIT_TO_BF,
+      ShipmentStatus.IN_TRANSIT,
     ),
     false,
   );
   assert.equal(
     canTransitionShipmentStatus(
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       ShipmentStatus.DELIVERED,
     ),
     false,
@@ -122,7 +150,7 @@ test("recognizes only delivered and cancelled as terminal", () => {
 test("returns transitions in forward-then-cancelled order", () => {
   assert.deepEqual(
     getAllowedShipmentStatusTransitions(ShipmentStatus.AWAITING_PACKAGE),
-    [ShipmentStatus.PACKAGE_RECEIVED_US, ShipmentStatus.CANCELLED],
+    [ShipmentStatus.PACKAGE_RECEIVED, ShipmentStatus.CANCELLED],
   );
   assert.deepEqual(
     getAllowedShipmentStatusTransitions(ShipmentStatus.AWAITING_PAYMENT),
@@ -139,6 +167,6 @@ test("does not expose mutable internal transition arrays", () => {
 
   assert.deepEqual(
     getAllowedShipmentStatusTransitions(ShipmentStatus.AWAITING_PACKAGE),
-    [ShipmentStatus.PACKAGE_RECEIVED_US, ShipmentStatus.CANCELLED],
+    [ShipmentStatus.PACKAGE_RECEIVED, ShipmentStatus.CANCELLED],
   );
 });

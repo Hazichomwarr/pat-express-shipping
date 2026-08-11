@@ -13,26 +13,26 @@ test("maps the six operational statuses to their contextual next steps", () => {
   const expected = [
     [
       ShipmentStatus.AWAITING_PACKAGE,
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       "Réceptionner le colis",
     ],
     [
-      ShipmentStatus.PACKAGE_RECEIVED_US,
+      ShipmentStatus.PACKAGE_RECEIVED,
       ShipmentStatus.AWAITING_QUOTE,
       "Mettre en attente de devis",
     ],
     [
       ShipmentStatus.PAYMENT_CONFIRMED,
-      ShipmentStatus.IN_TRANSIT_TO_BF,
+      ShipmentStatus.IN_TRANSIT,
       "Marquer en transit vers le Burkina Faso",
     ],
     [
-      ShipmentStatus.IN_TRANSIT_TO_BF,
-      ShipmentStatus.ARRIVED_BF,
+      ShipmentStatus.IN_TRANSIT,
+      ShipmentStatus.ARRIVED_DESTINATION,
       "Marquer arrivé au Burkina Faso",
     ],
     [
-      ShipmentStatus.ARRIVED_BF,
+      ShipmentStatus.ARRIVED_DESTINATION,
       ShipmentStatus.READY_FOR_PICKUP,
       "Marquer prêt pour le retrait",
     ],
