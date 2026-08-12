@@ -9,7 +9,7 @@ type NavbarProps = {
 
 const navigation = {
   en: {
-    tagline: "Des États-Unis vers le Burkina Faso",
+    tagline: "États-Unis ↔ Burkina Faso",
     links: [
       { label: "Accueil", href: "/" },
       { label: "Fonctionnement", href: "/#how-it-works" },
