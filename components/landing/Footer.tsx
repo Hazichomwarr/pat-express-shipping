@@ -13,7 +13,7 @@ const footerContent = {
     quickLinks: [
       { label: "Accueil", href: "/" },
       { label: "Créer un envoi", href: "/expedier" },
-      { label: "Suivre un colis", href: "/track" },
+      { label: "Suivre un colis", href: "/suivi" },
       { label: "Fonctionnement", href: "/#how-it-works" },
     ],
     contact: "Contact",
@@ -31,7 +31,7 @@ const footerContent = {
     quickLinks: [
       { label: "Accueil", href: "/" },
       { label: "Créer un envoi", href: "/expedier" },
-      { label: "Suivre un colis", href: "/track" },
+      { label: "Suivre un colis", href: "/suivi" },
       { label: "Fonctionnement", href: "/#how-it-works" },
     ],
     contact: "Contact",

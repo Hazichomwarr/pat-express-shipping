@@ -36,7 +36,7 @@ export default function Hero() {
             </Link>
 
             <Link
-              href="/track"
+              href="/suivi"
               className="rounded-lg border border-blue-700 px-7 py-4 text-center font-semibold text-blue-700 transition hover:bg-blue-50"
             >
               Suivre un colis

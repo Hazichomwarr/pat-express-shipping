@@ -32,7 +32,7 @@ export default function CTA() {
           </Link>
 
           <Link
-            href="/track"
+            href="/suivi"
             className="inline-flex items-center gap-3 rounded-xl border border-white/30 px-8 py-5 text-lg font-bold text-white transition hover:bg-white/10"
           >
             Suivre un colis
