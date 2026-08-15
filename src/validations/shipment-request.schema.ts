@@ -101,7 +101,7 @@ export const createShipmentRequestInputSchema = z.strictObject(
     }),
     senderName: requiredNameSchema,
     senderPhone: phoneSchema,
-    senderEmail: emailSchema,
+    senderEmail: optionalEmailSchema,
     recipientName: requiredNameSchema,
     recipientPhone: phoneSchema,
     recipientEmail: optionalEmailSchema,

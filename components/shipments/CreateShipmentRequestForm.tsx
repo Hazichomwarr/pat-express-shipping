@@ -92,8 +92,8 @@ function SectionHeading({
   description: string;
 }) {
   return (
-    <div className="flex items-start gap-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-sm font-black text-white shadow-sm">
+    <div className="flex items-start gap-3">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-black text-blue-700 ring-1 ring-blue-200">
         {number}
       </span>
       <div>
@@ -530,7 +530,7 @@ export default function CreateShipmentRequestForm() {
             </div>
             <div>
               <label htmlFor="senderEmail" className="text-sm font-bold text-slate-800">
-                Adresse e-mail
+                Adresse e-mail (facultatif)
               </label>
               <input
                 id="senderEmail"

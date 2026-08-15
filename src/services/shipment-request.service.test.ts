@@ -32,7 +32,7 @@ type ShipmentCreateData = {
   intakeMethod: ShipmentIntakeMethod;
   senderName: string;
   senderPhone: string;
-  senderEmail: string;
+  senderEmail?: string;
   recipientName: string;
   recipientPhone: string;
   recipientEmail?: string;
@@ -158,6 +158,7 @@ test("turns optional empty strings into absent nested-create values", async () =
   const attempts: Prisma.ShipmentCreateArgs[] = [];
   const input = {
     ...validInput(),
+    senderEmail: "   ",
     recipientEmail: "   ",
     recipientNotes: "   ",
     customerNotes: "   ",
@@ -169,9 +170,25 @@ test("turns optional empty strings into absent nested-create values", async () =
   );
 
   const data = attempts[0].data as ShipmentCreateData;
+  assert.equal(data.senderEmail, undefined);
   assert.equal(data.recipientEmail, undefined);
   assert.equal(data.recipientNotes, undefined);
   assert.equal(data.customerNotes, undefined);
+});
+
+test("persists a missing sender email without inventing a placeholder", async () => {
+  const attempts: Prisma.ShipmentCreateArgs[] = [];
+  const input: Record<string, unknown> = { ...validInput() };
+  delete input.senderEmail;
+
+  await createGuestShipmentRequest(
+    input,
+    createSuccessfulDependencies(attempts),
+  );
+
+  const data = attempts[0].data as ShipmentCreateData;
+  assert.equal(data.senderEmail, undefined);
+  assert.equal(JSON.stringify(data).includes("no-email@example.com"), false);
 });
 
 test("converts declared values to Prisma Decimal without losing zero", async () => {

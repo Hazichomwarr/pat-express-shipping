@@ -112,6 +112,18 @@ export default function CreateShipmentPage() {
 
         <section className="px-6 pb-20 sm:pb-28">
           <div className="mx-auto max-w-6xl">
+            <div className="mb-7 max-w-3xl sm:mb-9">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-blue-700">
+                Demande d’envoi
+              </p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                Commencez votre envoi
+              </h2>
+              <p className="mt-3 text-lg leading-8 text-slate-600">
+                Remplissez les informations ci-dessous pour créer votre
+                demande. Aucun paiement n’est demandé à cette étape.
+              </p>
+            </div>
             <CreateShipmentRequestForm />
           </div>
         </section>

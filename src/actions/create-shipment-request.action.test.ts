@@ -260,6 +260,24 @@ test("maps Zod issues to stable French field-error paths", async () => {
   assert.equal(JSON.stringify(state).includes("invalid_type"), false);
 });
 
+test("accepts blank sender email without injecting a placeholder", async () => {
+  const formData = validFormData();
+  formData.set("senderEmail", "   ");
+  let receivedInput: unknown;
+
+  const state = await runAction(formData, async (input) => {
+    receivedInput = createShipmentRequestInputSchema.parse(input);
+    return SUCCESS_RESULT;
+  });
+
+  assert.equal(state.status, "success");
+  assert.equal(
+    (receivedInput as { senderEmail?: string }).senderEmail,
+    undefined,
+  );
+  assert.equal(JSON.stringify(receivedInput).includes("no-email@example.com"), false);
+});
+
 test("an invalid or empty quantity returns validation state instead of throwing", async () => {
   for (const quantity of ["abc", ""]) {
     const formData = validFormData();

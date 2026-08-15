@@ -126,6 +126,35 @@ test("lowercases sender and recipient email addresses", () => {
   assert.equal(result.recipientEmail, "awa@example.com");
 });
 
+test("accepts an empty or missing sender email and normalizes it to undefined", () => {
+  const emptyEmailResult = createShipmentRequestInputSchema.parse({
+    ...validRequest(),
+    senderEmail: "   ",
+  });
+  const requestWithoutSenderEmail: Record<string, unknown> = {
+    ...validRequest(),
+  };
+  delete requestWithoutSenderEmail.senderEmail;
+  const missingEmailResult = createShipmentRequestInputSchema.parse(
+    requestWithoutSenderEmail,
+  );
+
+  assert.equal(emptyEmailResult.senderEmail, undefined);
+  assert.equal(missingEmailResult.senderEmail, undefined);
+});
+
+test("rejects an invalid non-empty sender email", () => {
+  const result = createShipmentRequestInputSchema.safeParse({
+    ...validRequest(),
+    senderEmail: "adresse-invalide",
+  });
+
+  assertFirstErrorMessage(
+    result,
+    "Veuillez saisir une adresse e-mail valide.",
+  );
+});
+
 test("normalizes optional empty strings to undefined", () => {
   const result = createShipmentRequestInputSchema.parse({
     ...validRequest(),

@@ -360,7 +360,9 @@ export default async function StaffShipmentWorkspacePage({
           >
             <Detail label="Nom" value={shipment.senderName} />
             <Detail label="Téléphone" value={shipment.senderPhone} />
-            <Detail label="Adresse e-mail" value={shipment.senderEmail} />
+            {shipment.senderEmail ? (
+              <Detail label="Adresse e-mail" value={shipment.senderEmail} />
+            ) : null}
           </ContactCard>
           <ContactCard
             title={`Destinataire — ${getShipmentDirectionDestinationLabel(shipment.direction)}`}
