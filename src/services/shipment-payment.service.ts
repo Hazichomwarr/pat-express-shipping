@@ -28,6 +28,7 @@ const createdPaymentSelect = {
   amount: true,
   currency: true,
   zelleName: true,
+  mobileMoneyPayerName: true,
   createdAt: true,
 } satisfies Prisma.ShipmentPaymentSelect;
 
@@ -92,6 +93,7 @@ export type CreateShipmentPaymentResult = {
   amount: string;
   currency: ShipmentQuoteCurrency;
   zelleName: string | null;
+  mobileMoneyPayerName: string | null;
   createdAt: Date;
 };
 
@@ -200,6 +202,8 @@ export async function createShipmentPayment(
         amount: paymentAmount,
         currency: validatedInput.currency,
         zelleName: validatedInput.zelleName ?? null,
+        mobileMoneyPayerName:
+          validatedInput.mobileMoneyPayerName ?? null,
       },
       select: createdPaymentSelect,
     });
@@ -212,6 +216,7 @@ export async function createShipmentPayment(
       amount: payment.amount.toString(),
       currency: payment.currency,
       zelleName: payment.zelleName,
+      mobileMoneyPayerName: payment.mobileMoneyPayerName,
       createdAt: payment.createdAt,
     };
   });

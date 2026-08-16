@@ -41,6 +41,10 @@ test("provides French payment-method labels", () => {
     getShipmentPaymentMethodLabel(ShipmentPaymentMethod.CASH),
     "Espèces",
   );
+  assert.equal(
+    getShipmentPaymentMethodLabel(ShipmentPaymentMethod.ORANGE_MONEY),
+    "Orange Money",
+  );
 });
 
 test("provides French payment-status labels", () => {

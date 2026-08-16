@@ -71,6 +71,10 @@ function paymentFromFormData(formData: FormData) {
     amount: numberFromFormValue(getStringFormValue(formData, "amount")),
     currency: getStringFormValue(formData, "currency"),
     zelleName: getStringFormValue(formData, "zelleName"),
+    mobileMoneyPayerName: getStringFormValue(
+      formData,
+      "mobileMoneyPayerName",
+    ),
   };
 }
 
@@ -132,6 +136,7 @@ export async function executeCreateShipmentPaymentAction(
         amount: payment.amount,
         currency: payment.currency,
         zelleName: payment.zelleName,
+        mobileMoneyPayerName: payment.mobileMoneyPayerName,
         createdAt: payment.createdAt.toISOString(),
       },
     };

@@ -39,6 +39,7 @@ const SUCCESS_RESULT: CreateShipmentPaymentResult = {
   amount: "149.99",
   currency: ShipmentQuoteCurrency.USD,
   zelleName: "Ada Sender",
+  mobileMoneyPayerName: null,
   createdAt: CREATED_AT,
 };
 
@@ -213,6 +214,7 @@ test("trims shipment ID and converts payment FormData representation", async () 
     amount: 120.5,
     currency: "XOF",
     zelleName: "",
+    mobileMoneyPayerName: undefined,
   });
 });
 
@@ -253,8 +255,30 @@ test("ignores caller-supplied server-controlled fields", async () => {
     "amount",
     "currency",
     "method",
+    "mobileMoneyPayerName",
     "zelleName",
   ]);
+});
+
+test("passes Orange Money payer identity through the action boundary", async () => {
+  const formData = validFormData();
+  formData.set("method", ShipmentPaymentMethod.ORANGE_MONEY);
+  formData.set("zelleName", "");
+  formData.set("mobileMoneyPayerName", "  Awa Ouédraogo  ");
+  let receivedInput: unknown;
+
+  await runHandler(formData, async (_shipmentId, input) => {
+    receivedInput = input;
+    return SUCCESS_RESULT;
+  });
+
+  assert.deepEqual(receivedInput, {
+    method: ShipmentPaymentMethod.ORANGE_MONEY,
+    amount: 149.99,
+    currency: ShipmentQuoteCurrency.USD,
+    zelleName: "",
+    mobileMoneyPayerName: "  Awa Ouédraogo  ",
+  });
 });
 
 test("maps Zod field paths and preserves French validation messages", async () => {
@@ -377,6 +401,7 @@ test("returns only safe pending-payment fields with an ISO timestamp", async () 
       amount: "149.99",
       currency: ShipmentQuoteCurrency.USD,
       zelleName: "Ada Sender",
+      mobileMoneyPayerName: null,
       createdAt: "2026-08-08T22:00:00.000Z",
     },
   });

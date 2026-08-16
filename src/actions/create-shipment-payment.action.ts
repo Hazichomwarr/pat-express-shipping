@@ -26,6 +26,7 @@ export type CreateShipmentPaymentActionState =
         amount: string;
         currency: ShipmentQuoteCurrency;
         zelleName: string | null;
+        mobileMoneyPayerName: string | null;
         createdAt: string;
       };
     }

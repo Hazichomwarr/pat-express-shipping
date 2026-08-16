@@ -19,6 +19,7 @@ const paymentForConfirmationSelect = {
   amount: true,
   currency: true,
   zelleName: true,
+  mobileMoneyPayerName: true,
   confirmedAt: true,
   confirmedByStaffId: true,
   cancelledAt: true,
@@ -86,6 +87,7 @@ export type ConfirmShipmentPaymentResult = {
     amount: string;
     currency: ShipmentQuoteCurrency;
     zelleName: string | null;
+    mobileMoneyPayerName: string | null;
     confirmedAt: Date;
     confirmedByStaffId: string;
   };
@@ -233,6 +235,7 @@ export async function confirmShipmentPayment(
       amount: payment.amount.toString(),
       currency: payment.currency,
       zelleName: payment.zelleName,
+      mobileMoneyPayerName: payment.mobileMoneyPayerName,
       confirmedAt,
       confirmedByStaffId: staffId,
     },

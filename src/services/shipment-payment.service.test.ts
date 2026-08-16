@@ -51,6 +51,15 @@ function validCashInput() {
   };
 }
 
+function validOrangeMoneyInput() {
+  return {
+    method: ShipmentPaymentMethod.ORANGE_MONEY,
+    amount: 149.99,
+    currency: ShipmentQuoteCurrency.USD,
+    mobileMoneyPayerName: "  Awa Ouédraogo  ",
+  };
+}
+
 function payableShipment(
   overrides: Partial<ShipmentLookup> = {},
 ): ShipmentLookup {
@@ -92,6 +101,7 @@ function createDependencies(
         amount: Prisma.Decimal;
         currency: ShipmentQuoteCurrency;
         zelleName: string | null;
+        mobileMoneyPayerName: string | null;
       };
 
       return {
@@ -102,6 +112,7 @@ function createDependencies(
         amount: data.amount,
         currency: data.currency,
         zelleName: data.zelleName,
+        mobileMoneyPayerName: data.mobileMoneyPayerName,
         createdAt: CREATED_AT,
       };
     },
@@ -141,6 +152,7 @@ test("creates a pending Zelle payment and returns only safe fields", async () =>
     amount: "149.99",
     currency: ShipmentQuoteCurrency.USD,
     zelleName: "Ada Sender",
+    mobileMoneyPayerName: null,
     createdAt: CREATED_AT,
   });
   assert.deepEqual(Object.keys(result).sort(), [
@@ -149,6 +161,7 @@ test("creates a pending Zelle payment and returns only safe fields", async () =>
     "currency",
     "id",
     "method",
+    "mobileMoneyPayerName",
     "shipmentId",
     "status",
     "zelleName",
@@ -157,6 +170,7 @@ test("creates a pending Zelle payment and returns only safe fields", async () =>
   const data = creates[0].data as Record<string, unknown>;
   assert.equal(data.status, ShipmentPaymentStatus.PENDING);
   assert.equal(data.zelleName, "Ada Sender");
+  assert.equal(data.mobileMoneyPayerName, null);
   assert.equal("confirmedAt" in data, false);
   assert.equal("confirmedByStaffId" in data, false);
   assert.equal("cancelledAt" in data, false);
@@ -174,9 +188,38 @@ test("creates cash with a null Zelle identity", async () => {
 
   assert.equal(result.method, ShipmentPaymentMethod.CASH);
   assert.equal(result.zelleName, null);
+  assert.equal(result.mobileMoneyPayerName, null);
   assert.equal(
     (creates[0].data as { zelleName: string | null }).zelleName,
     null,
+  );
+  assert.equal(
+    (creates[0].data as { mobileMoneyPayerName: string | null })
+      .mobileMoneyPayerName,
+    null,
+  );
+});
+
+test("creates Orange Money with only its normalized payer identity", async () => {
+  const { dependencies, creates } = createDependencies();
+
+  const result = await createShipmentPayment(
+    SHIPMENT_ID,
+    validOrangeMoneyInput(),
+    dependencies,
+  );
+
+  assert.equal(result.method, ShipmentPaymentMethod.ORANGE_MONEY);
+  assert.equal(result.zelleName, null);
+  assert.equal(result.mobileMoneyPayerName, "Awa Ouédraogo");
+  assert.equal(
+    (creates[0].data as { zelleName: string | null }).zelleName,
+    null,
+  );
+  assert.equal(
+    (creates[0].data as { mobileMoneyPayerName: string | null })
+      .mobileMoneyPayerName,
+    "Awa Ouédraogo",
   );
 });
 
@@ -338,6 +381,7 @@ test("does not update shipment status or set confirmation metadata", async () =>
     "amount",
     "currency",
     "method",
+    "mobileMoneyPayerName",
     "shipmentId",
     "status",
     "zelleName",

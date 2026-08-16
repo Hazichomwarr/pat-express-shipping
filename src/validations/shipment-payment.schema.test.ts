@@ -14,6 +14,7 @@ function validZellePayment() {
     amount: 149.99,
     currency: ShipmentQuoteCurrency.USD,
     zelleName: "John Doe",
+    mobileMoneyPayerName: undefined,
   };
 }
 
@@ -23,6 +24,17 @@ function validCashPayment() {
     amount: 80,
     currency: ShipmentQuoteCurrency.USD,
     zelleName: undefined,
+    mobileMoneyPayerName: undefined,
+  };
+}
+
+function validOrangeMoneyPayment() {
+  return {
+    method: ShipmentPaymentMethod.ORANGE_MONEY,
+    amount: 120,
+    currency: ShipmentQuoteCurrency.USD,
+    zelleName: undefined,
+    mobileMoneyPayerName: "Awa Ouédraogo",
   };
 }
 
@@ -33,13 +45,22 @@ function issueMessages(input: unknown) {
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 }
 
-test("parses valid Zelle and cash payments", () => {
+test("parses all generated payment methods without removing existing values", () => {
+  assert.deepEqual(Object.values(ShipmentPaymentMethod), [
+    "ZELLE",
+    "CASH",
+    "ORANGE_MONEY",
+  ]);
   assert.deepEqual(shipmentPaymentInputSchema.parse(validZellePayment()), {
     ...validZellePayment(),
   });
   assert.deepEqual(shipmentPaymentInputSchema.parse(validCashPayment()), {
     ...validCashPayment(),
   });
+  assert.deepEqual(
+    shipmentPaymentInputSchema.parse(validOrangeMoneyPayment()),
+    validOrangeMoneyPayment(),
+  );
 });
 
 test("trims the Zelle name", () => {
@@ -58,6 +79,16 @@ test("normalizes an optional empty Zelle name to undefined", () => {
       ...validCashPayment(),
       zelleName: "   ",
     }).zelleName,
+    undefined,
+  );
+});
+
+test("normalizes an optional empty Orange Money payer name to undefined", () => {
+  assert.equal(
+    shipmentPaymentInputSchema.parse({
+      ...validCashPayment(),
+      mobileMoneyPayerName: "   ",
+    }).mobileMoneyPayerName,
     undefined,
   );
 });
@@ -88,6 +119,61 @@ test("accepts cash without a Zelle name and rejects contradictory cash input", (
     [
       "Le nom Zelle ne doit pas être renseigné pour un paiement en espèces.",
     ],
+  );
+  assert.deepEqual(
+    issueMessages({
+      ...validCashPayment(),
+      mobileMoneyPayerName: "Awa Ouédraogo",
+    }),
+    [
+      "Le nom Orange Money ne doit pas être renseigné pour un paiement en espèces.",
+    ],
+  );
+});
+
+test("requires and normalizes an actionable Orange Money payer name", () => {
+  const parsed = shipmentPaymentInputSchema.parse({
+    ...validOrangeMoneyPayment(),
+    mobileMoneyPayerName: "  Awa Ouédraogo  ",
+  });
+
+  assert.equal(parsed.mobileMoneyPayerName, "Awa Ouédraogo");
+  assert.equal(parsed.zelleName, undefined);
+
+  for (const [mobileMoneyPayerName, expectedMessage] of [
+    [undefined, "Veuillez indiquer le nom associé au paiement Orange Money."],
+    ["", "Veuillez indiquer le nom associé au paiement Orange Money."],
+    ["   ", "Veuillez indiquer le nom associé au paiement Orange Money."],
+    ["A", "Le nom Orange Money doit contenir au moins 2 caractères."],
+    [
+      "A".repeat(121),
+      "Le nom Orange Money ne peut pas dépasser 120 caractères.",
+    ],
+  ] as const) {
+    assert.equal(
+      issueMessages({
+        ...validOrangeMoneyPayment(),
+        mobileMoneyPayerName,
+      }).includes(expectedMessage),
+      true,
+    );
+  }
+});
+
+test("rejects contradictory Zelle and Orange Money identities", () => {
+  assert.deepEqual(
+    issueMessages({
+      ...validZellePayment(),
+      mobileMoneyPayerName: "Awa Ouédraogo",
+    }),
+    ["Le nom Orange Money ne doit pas être renseigné pour un paiement Zelle."],
+  );
+  assert.deepEqual(
+    issueMessages({
+      ...validOrangeMoneyPayment(),
+      zelleName: "Ada Sender",
+    }),
+    ["Le nom Zelle ne doit pas être renseigné pour un paiement Orange Money."],
   );
 });
 

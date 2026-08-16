@@ -73,6 +73,7 @@ const shipmentIntakeMethodLabels: Record<ShipmentIntakeMethod, string> = {
 const shipmentPaymentMethodLabels: Record<ShipmentPaymentMethod, string> = {
   ZELLE: "Zelle",
   CASH: "Espèces",
+  ORANGE_MONEY: "Orange Money",
 };
 
 const shipmentPaymentStatusLabels: Record<ShipmentPaymentStatus, string> = {

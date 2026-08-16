@@ -81,6 +81,7 @@ export async function executeConfirmShipmentPaymentAction(
         amount: result.payment.amount,
         currency: result.payment.currency,
         zelleName: result.payment.zelleName,
+        mobileMoneyPayerName: result.payment.mobileMoneyPayerName,
         confirmedAt: result.payment.confirmedAt.toISOString(),
         confirmedByStaffId: result.payment.confirmedByStaffId,
       },

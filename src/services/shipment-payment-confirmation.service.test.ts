@@ -48,6 +48,7 @@ function pendingPayment(
     amount: new Prisma.Decimal("149.99"),
     currency: ShipmentQuoteCurrency.USD,
     zelleName: "Ada Sender",
+    mobileMoneyPayerName: null,
     confirmedAt: null,
     confirmedByStaffId: null,
     cancelledAt: null,
@@ -131,6 +132,7 @@ test("confirms a pending payment and returns only safe state", async () => {
       amount: "149.99",
       currency: ShipmentQuoteCurrency.USD,
       zelleName: "Ada Sender",
+      mobileMoneyPayerName: null,
       confirmedAt: CONFIRMED_AT,
       confirmedByStaffId: STAFF_ID,
     },
@@ -149,6 +151,7 @@ test("confirms a pending payment and returns only safe state", async () => {
     "currency",
     "id",
     "method",
+    "mobileMoneyPayerName",
     "shipmentId",
     "status",
     "zelleName",
@@ -306,6 +309,34 @@ test("does not rewrite original payment facts", async () => {
   assert.equal("amount" in paymentUpdates[0].data, false);
   assert.equal("currency" in paymentUpdates[0].data, false);
   assert.equal("zelleName" in paymentUpdates[0].data, false);
+  assert.equal("mobileMoneyPayerName" in paymentUpdates[0].data, false);
+});
+
+test("confirmation preserves Orange Money payment identity", async () => {
+  const orangeMoneyPayment = pendingPayment({
+    method: ShipmentPaymentMethod.ORANGE_MONEY,
+    zelleName: null,
+    mobileMoneyPayerName: "Awa Ouédraogo",
+  });
+  const { dependencies, paymentUpdates } = createDependencies({
+    payment: orangeMoneyPayment,
+  });
+
+  const result = await confirmShipmentPayment(
+    PAYMENT_ID,
+    STAFF_ID,
+    dependencies,
+  );
+
+  assert.equal(result.payment.method, ShipmentPaymentMethod.ORANGE_MONEY);
+  assert.equal(result.payment.amount, "149.99");
+  assert.equal(result.payment.currency, ShipmentQuoteCurrency.USD);
+  assert.equal(result.payment.zelleName, null);
+  assert.equal(result.payment.mobileMoneyPayerName, "Awa Ouédraogo");
+  assert.equal("method" in paymentUpdates[0].data, false);
+  assert.equal("amount" in paymentUpdates[0].data, false);
+  assert.equal("currency" in paymentUpdates[0].data, false);
+  assert.equal("mobileMoneyPayerName" in paymentUpdates[0].data, false);
 });
 
 test("throws a conflict when the conditional payment update loses", async () => {

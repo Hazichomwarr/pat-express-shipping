@@ -27,6 +27,7 @@ export type ConfirmShipmentPaymentActionState =
         amount: string;
         currency: ShipmentQuoteCurrency;
         zelleName: string | null;
+        mobileMoneyPayerName: string | null;
         confirmedAt: string;
         confirmedByStaffId: string;
       };
