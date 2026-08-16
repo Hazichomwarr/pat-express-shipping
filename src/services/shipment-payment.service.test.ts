@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   Prisma,
+  ShipmentDirection,
   ShipmentPaymentMethod,
   ShipmentPaymentStatus,
   ShipmentQuoteCurrency,
@@ -15,6 +16,7 @@ import {
   ShipmentNotFoundError,
   ShipmentPaymentAmountMismatchError,
   ShipmentPaymentCurrencyMismatchError,
+  ShipmentPaymentMethodNotAllowedForDirectionError,
   ShipmentPaymentNotAllowedError,
   ShipmentPendingPaymentAlreadyExistsError,
   ShipmentQuoteIncompleteError,
@@ -66,6 +68,7 @@ function payableShipment(
   return {
     id: SHIPMENT_ID,
     status: ShipmentStatus.AWAITING_PAYMENT,
+    direction: ShipmentDirection.US_TO_BF,
     measuredWeightKg: new Prisma.Decimal("10.125"),
     ratePerKg: new Prisma.Decimal("8.50"),
     quotedAmount: new Prisma.Decimal("149.99"),
@@ -201,7 +204,10 @@ test("creates cash with a null Zelle identity", async () => {
 });
 
 test("creates Orange Money with only its normalized payer identity", async () => {
-  const { dependencies, creates } = createDependencies();
+  const { dependencies, creates } = createDependencies({
+    findShipment: async () =>
+      payableShipment({ direction: ShipmentDirection.BF_TO_US }),
+  });
 
   const result = await createShipmentPayment(
     SHIPMENT_ID,
@@ -221,6 +227,53 @@ test("creates Orange Money with only its normalized payer identity", async () =>
       .mobileMoneyPayerName,
     "Awa Ouédraogo",
   );
+});
+
+test("allows Cash for shipments in both directions", async () => {
+  for (const direction of Object.values(ShipmentDirection)) {
+    const { dependencies, creates } = createDependencies({
+      findShipment: async () => payableShipment({ direction }),
+    });
+
+    const result = await createShipmentPayment(
+      SHIPMENT_ID,
+      validCashInput(),
+      dependencies,
+    );
+
+    assert.equal(result.method, ShipmentPaymentMethod.CASH);
+    assert.equal(creates.length, 1);
+  }
+});
+
+test("rejects methods that are valid in the domain but unavailable for the shipment direction", async () => {
+  const cases = [
+    {
+      direction: ShipmentDirection.US_TO_BF,
+      input: validOrangeMoneyInput(),
+    },
+    {
+      direction: ShipmentDirection.BF_TO_US,
+      input: validZelleInput(),
+    },
+  ] as const;
+
+  for (const { direction, input } of cases) {
+    const {
+      dependencies,
+      creates,
+      getFindPendingPaymentCount,
+    } = createDependencies({
+      findShipment: async () => payableShipment({ direction }),
+    });
+
+    await assert.rejects(
+      createShipmentPayment(SHIPMENT_ID, input, dependencies),
+      ShipmentPaymentMethodNotAllowedForDirectionError,
+    );
+    assert.equal(getFindPendingPaymentCount(), 0);
+    assert.equal(creates.length, 0);
+  }
 });
 
 test("validates input before opening a database transaction", async () => {

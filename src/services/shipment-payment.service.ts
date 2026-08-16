@@ -7,12 +7,16 @@ import {
   ShipmentQuoteCurrency,
 } from "@prisma/client";
 
-import { canStartShipmentPayment } from "./_shared/shipment-payment";
+import {
+  canStartShipmentPayment,
+  isShipmentPaymentMethodAllowedForDirection,
+} from "./_shared/shipment-payment";
 import { shipmentPaymentInputSchema } from "../validations/shipment-payment.schema";
 
 const shipmentForPaymentSelect = {
   id: true,
   status: true,
+  direction: true,
   measuredWeightKg: true,
   ratePerKg: true,
   quotedAmount: true,
@@ -111,6 +115,13 @@ export class ShipmentPaymentNotAllowedError extends Error {
   }
 }
 
+export class ShipmentPaymentMethodNotAllowedForDirectionError extends Error {
+  constructor() {
+    super("Payment method is not allowed for this shipment direction.");
+    this.name = "ShipmentPaymentMethodNotAllowedForDirectionError";
+  }
+}
+
 export class ShipmentQuoteIncompleteError extends Error {
   constructor() {
     super("Shipment quotation is incomplete.");
@@ -174,6 +185,15 @@ export async function createShipmentPayment(
 
     if (!canStartShipmentPayment(shipment.status)) {
       throw new ShipmentPaymentNotAllowedError();
+    }
+
+    if (
+      !isShipmentPaymentMethodAllowedForDirection(
+        shipment.direction,
+        validatedInput.method,
+      )
+    ) {
+      throw new ShipmentPaymentMethodNotAllowedForDirectionError();
     }
 
     if (!hasCompleteQuotation(shipment)) {

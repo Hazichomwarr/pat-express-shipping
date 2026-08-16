@@ -23,6 +23,7 @@ type ShipmentPaymentConfirmationProps = {
     amount: string;
     currency: string;
     zelleName: string | null;
+    mobileMoneyPayerName: string | null;
     createdAt: string;
   };
   loginUrl: string;
@@ -68,6 +69,12 @@ export default function ShipmentPaymentConfirmation({
           <div className="rounded-2xl bg-slate-50 p-4"><dt className="text-sm font-semibold text-slate-500">Statut de l’envoi</dt><dd className="mt-1 font-bold text-emerald-800">Paiement confirmé</dd></div>
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4"><dt className="text-sm font-semibold text-blue-700">Montant</dt><dd className="mt-1 text-xl font-black text-blue-950">{state.payment.amount} {state.payment.currency}</dd></div>
           <div className="rounded-2xl bg-slate-50 p-4"><dt className="text-sm font-semibold text-slate-500">Date de confirmation</dt><dd className="mt-1 font-bold">{formatDate(state.payment.confirmedAt)}</dd></div>
+          {state.payment.zelleName ? (
+            <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2"><dt className="text-sm font-semibold text-slate-500">Nom Zelle</dt><dd className="mt-1 font-bold">{state.payment.zelleName}</dd></div>
+          ) : null}
+          {state.payment.mobileMoneyPayerName ? (
+            <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2"><dt className="text-sm font-semibold text-slate-500">Nom Orange Money</dt><dd className="mt-1 font-bold">{state.payment.mobileMoneyPayerName}</dd></div>
+          ) : null}
         </dl>
         <div className="px-6 pb-6 sm:px-8 sm:pb-8">
           <button type="button" onClick={() => router.refresh()} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200">
@@ -94,7 +101,7 @@ export default function ShipmentPaymentConfirmation({
       </dl>
 
       <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
-        <div className="flex items-start gap-3"><AlertTriangle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="font-bold">Confirmez ce paiement uniquement après avoir vérifié que les fonds ont bien été reçus.</p><p className="mt-2 text-sm leading-6">{payment.method === "ZELLE" ? `Nom Zelle déclaré : ${payment.zelleName ?? "Non renseigné"}` : "Paiement en espèces à confirmer après réception physique."}</p></div></div>
+        <div className="flex items-start gap-3"><AlertTriangle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" /><div><p className="font-bold">{payment.method === "ORANGE_MONEY" ? "Confirmez ce paiement uniquement après avoir vérifié que les fonds Orange Money ont bien été reçus." : "Confirmez ce paiement uniquement après avoir vérifié que les fonds ont bien été reçus."}</p><p className="mt-2 text-sm leading-6">{payment.method === "ZELLE" ? `Nom Zelle déclaré : ${payment.zelleName ?? "Non renseigné"}` : payment.method === "ORANGE_MONEY" ? `Nom Orange Money déclaré : ${payment.mobileMoneyPayerName ?? "Non renseigné"}` : "Paiement en espèces à confirmer après réception physique."}</p></div></div>
       </div>
 
       {state.status === "validation_error" ? (

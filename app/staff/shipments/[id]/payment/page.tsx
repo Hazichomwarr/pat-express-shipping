@@ -16,6 +16,7 @@ import { prisma } from "@/src/lib/prisma";
 import {
   canConfirmShipmentPaymentStatus,
   canStartShipmentPayment,
+  getAllowedShipmentPaymentMethods,
   isTerminalShipmentPaymentStatus,
 } from "@/src/services/_shared/shipment-payment";
 import {
@@ -68,6 +69,7 @@ async function findShipmentForPayment(id: string) {
           amount: true,
           currency: true,
           zelleName: true,
+          mobileMoneyPayerName: true,
           createdAt: true,
           confirmedAt: true,
           confirmedByStaffId: true,
@@ -146,6 +148,9 @@ function PaymentHistory({ payments }: { payments: ShipmentForPayment["payments"]
             <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
               {payment.zelleName ? (
                 <div><dt className="font-semibold text-slate-500">Nom Zelle</dt><dd className="font-bold text-slate-800">{payment.zelleName}</dd></div>
+              ) : null}
+              {payment.mobileMoneyPayerName ? (
+                <div><dt className="font-semibold text-slate-500">Nom Orange Money</dt><dd className="font-bold text-slate-800">{payment.mobileMoneyPayerName}</dd></div>
               ) : null}
               {payment.confirmedAt ? (
                 <div><dt className="font-semibold text-slate-500">Confirmé le</dt><dd className="font-bold text-slate-800">{dateFormatter.format(payment.confirmedAt)}</dd></div>
@@ -261,7 +266,7 @@ export default async function ShipmentPaymentPage({
               <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8"><h2 className="text-2xl font-black tracking-tight">Paiement indisponible</h2><p className="mt-3 leading-7 text-slate-700">Complétez d’abord le devis officiel avant d’enregistrer un paiement.</p></section>
             ) : pendingPayment ? (
               <ShipmentPaymentConfirmation
-                payment={{ id: pendingPayment.id, method: pendingPayment.method, amount: pendingPayment.amount.toString(), currency: pendingPayment.currency, zelleName: pendingPayment.zelleName, createdAt: pendingPayment.createdAt.toISOString() }}
+                payment={{ id: pendingPayment.id, method: pendingPayment.method, amount: pendingPayment.amount.toString(), currency: pendingPayment.currency, zelleName: pendingPayment.zelleName, mobileMoneyPayerName: pendingPayment.mobileMoneyPayerName, createdAt: pendingPayment.createdAt.toISOString() }}
                 loginUrl={loginUrl}
               />
             ) : confirmedPayment ? (
@@ -273,12 +278,13 @@ export default async function ShipmentPaymentPage({
                   <SummaryItem label="Méthode" value={getShipmentPaymentMethodLabel(confirmedPayment.method)} />
                   <SummaryItem label="Montant" value={`${confirmedPayment.amount.toString()} ${confirmedPayment.currency}`} />
                   {confirmedPayment.zelleName ? <SummaryItem label="Nom Zelle" value={confirmedPayment.zelleName} /> : null}
+                  {confirmedPayment.mobileMoneyPayerName ? <SummaryItem label="Nom Orange Money" value={confirmedPayment.mobileMoneyPayerName} /> : null}
                   <SummaryItem label="Date de création" value={dateFormatter.format(confirmedPayment.createdAt)} />
                   <SummaryItem label="Date de confirmation" value={confirmedPayment.confirmedAt ? dateFormatter.format(confirmedPayment.confirmedAt) : "Non renseignée"} />
                 </dl>
               </section>
             ) : mayCreatePayment ? (
-              <ShipmentPaymentForm shipmentId={shipment.id} amount={completeQuote.quotedAmount.toString()} currency={completeQuote.quoteCurrency} loginUrl={loginUrl} />
+              <ShipmentPaymentForm shipmentId={shipment.id} amount={completeQuote.quotedAmount.toString()} currency={completeQuote.quoteCurrency} loginUrl={loginUrl} allowedMethods={getAllowedShipmentPaymentMethods(shipment.direction)} />
             ) : (
               <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8"><h2 className="text-2xl font-black tracking-tight">Aucune action disponible</h2><p className="mt-3 leading-7 text-slate-600">Cet envoi est au statut « {getStaffShipmentStatusLabel(shipment.status, shipment.direction)} ». Un paiement ne peut être enregistré que lorsqu’il est en attente de paiement.</p></section>
             )}

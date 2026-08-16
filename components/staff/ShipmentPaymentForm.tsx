@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
+import type { ShipmentPaymentMethod } from "@prisma/client";
 import { Banknote, CheckCircle2, RefreshCw, Save, ShieldAlert } from "lucide-react";
 
 import {
@@ -22,6 +23,7 @@ type ShipmentPaymentFormProps = {
   amount: string;
   currency: string;
   loginUrl: string;
+  allowedMethods: readonly ShipmentPaymentMethod[];
 };
 
 function FieldError({ errors, id }: { errors?: string[]; id: string }) {
@@ -46,9 +48,10 @@ export default function ShipmentPaymentForm({
   amount,
   currency,
   loginUrl,
+  allowedMethods,
 }: ShipmentPaymentFormProps) {
   const router = useRouter();
-  const [method, setMethod] = useState<"ZELLE" | "CASH">("ZELLE");
+  const [method, setMethod] = useState<ShipmentPaymentMethod | null>(null);
   const [state, formAction, isPending] = useActionState(
     createShipmentPaymentAction,
     INITIAL_STATE,
@@ -112,6 +115,16 @@ export default function ShipmentPaymentForm({
             <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
               <dt className="text-sm font-semibold text-slate-500">Nom Zelle déclaré</dt>
               <dd className="mt-1 font-bold text-slate-950">{state.payment.zelleName}</dd>
+            </div>
+          ) : null}
+          {state.payment.mobileMoneyPayerName ? (
+            <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
+              <dt className="text-sm font-semibold text-slate-500">
+                Nom Orange Money déclaré
+              </dt>
+              <dd className="mt-1 font-bold text-slate-950">
+                {state.payment.mobileMoneyPayerName}
+              </dd>
             </div>
           ) : null}
         </dl>
@@ -203,7 +216,7 @@ export default function ShipmentPaymentForm({
           aria-describedby={fieldErrors.method ? "method-error" : undefined}
           className="mt-3 grid gap-3 sm:grid-cols-2"
         >
-          {(["ZELLE", "CASH"] as const).map((value) => (
+          {allowedMethods.map((value) => (
             <label key={value} className="flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-300 bg-white p-4 font-bold text-slate-900 transition has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:ring-2 has-checked:ring-blue-100">
               <input
                 type="radio"
@@ -252,6 +265,42 @@ export default function ShipmentPaymentForm({
           </div>
         ) : (
           <input type="hidden" name="zelleName" value="" />
+        )}
+
+        {method === "ORANGE_MONEY" ? (
+          <div className="mt-6">
+            <label
+              htmlFor="mobileMoneyPayerName"
+              className="text-sm font-bold text-slate-800"
+            >
+              Nom associé au paiement Orange Money
+            </label>
+            <input
+              id="mobileMoneyPayerName"
+              name="mobileMoneyPayerName"
+              type="text"
+              maxLength={120}
+              className={inputClassName}
+              aria-invalid={Boolean(fieldErrors.mobileMoneyPayerName)}
+              aria-describedby={
+                fieldErrors.mobileMoneyPayerName
+                  ? "mobileMoneyPayerName-help mobileMoneyPayerName-error"
+                  : "mobileMoneyPayerName-help"
+              }
+            />
+            <p
+              id="mobileMoneyPayerName-help"
+              className="mt-2 text-sm leading-6 text-slate-500"
+            >
+              Saisissez le nom communiqué pour faciliter la vérification du paiement.
+            </p>
+            <FieldError
+              errors={fieldErrors.mobileMoneyPayerName}
+              id="mobileMoneyPayerName-error"
+            />
+          </div>
+        ) : (
+          <input type="hidden" name="mobileMoneyPayerName" value="" />
         )}
       </fieldset>
 

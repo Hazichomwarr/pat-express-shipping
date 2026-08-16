@@ -21,6 +21,7 @@ import {
   ShipmentNotFoundError,
   ShipmentPaymentAmountMismatchError,
   ShipmentPaymentCurrencyMismatchError,
+  ShipmentPaymentMethodNotAllowedForDirectionError,
   ShipmentPaymentNotAllowedError,
   ShipmentPendingPaymentAlreadyExistsError,
   ShipmentQuoteIncompleteError,
@@ -281,6 +282,45 @@ test("passes Orange Money payer identity through the action boundary", async () 
   });
 });
 
+test("keeps incompatible payer identities empty for Zelle and Cash payloads", async () => {
+  const cases = [
+    {
+      method: ShipmentPaymentMethod.ZELLE,
+      zelleName: "Ada Sender",
+      mobileMoneyPayerName: "",
+    },
+    {
+      method: ShipmentPaymentMethod.CASH,
+      zelleName: "",
+      mobileMoneyPayerName: "",
+    },
+  ] as const;
+
+  for (const expected of cases) {
+    const formData = validFormData();
+    formData.set("method", expected.method);
+    formData.set("zelleName", expected.zelleName);
+    formData.set(
+      "mobileMoneyPayerName",
+      expected.mobileMoneyPayerName,
+    );
+    let receivedInput: unknown;
+
+    await runHandler(formData, async (_shipmentId, input) => {
+      receivedInput = input;
+      return SUCCESS_RESULT;
+    });
+
+    assert.deepEqual(receivedInput, {
+      method: expected.method,
+      amount: 149.99,
+      currency: ShipmentQuoteCurrency.USD,
+      zelleName: expected.zelleName,
+      mobileMoneyPayerName: expected.mobileMoneyPayerName,
+    });
+  }
+});
+
 test("maps Zod field paths and preserves French validation messages", async () => {
   const formData = validFormData();
   formData.set("amount", "0");
@@ -327,6 +367,10 @@ test("maps every payment-creation domain error to safe French", async () => {
     [
       ShipmentPaymentNotAllowedError,
       "Cet envoi ne peut pas recevoir de paiement dans son état actuel.",
+    ],
+    [
+      ShipmentPaymentMethodNotAllowedForDirectionError,
+      "Ce mode de paiement n’est pas disponible pour le sens de cet envoi.",
     ],
     [
       ShipmentQuoteIncompleteError,

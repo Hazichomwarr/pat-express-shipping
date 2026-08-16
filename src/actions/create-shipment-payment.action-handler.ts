@@ -8,6 +8,7 @@ import {
   ShipmentNotFoundError,
   ShipmentPaymentAmountMismatchError,
   ShipmentPaymentCurrencyMismatchError,
+  ShipmentPaymentMethodNotAllowedForDirectionError,
   ShipmentPaymentNotAllowedError,
   ShipmentPendingPaymentAlreadyExistsError,
   ShipmentQuoteIncompleteError,
@@ -25,6 +26,8 @@ const UNKNOWN_FIELD_MESSAGE =
 const NOT_FOUND_MESSAGE = "Cet envoi est introuvable.";
 const NOT_ALLOWED_MESSAGE =
   "Cet envoi ne peut pas recevoir de paiement dans son état actuel.";
+const METHOD_NOT_ALLOWED_FOR_DIRECTION_MESSAGE =
+  "Ce mode de paiement n’est pas disponible pour le sens de cet envoi.";
 const INCOMPLETE_QUOTE_MESSAGE =
   "Le devis de cet envoi est incomplet. Le paiement ne peut pas être enregistré.";
 const AMOUNT_MISMATCH_MESSAGE =
@@ -155,6 +158,13 @@ export async function executeCreateShipmentPaymentAction(
 
     if (error instanceof ShipmentPaymentNotAllowedError) {
       return { status: "error", message: NOT_ALLOWED_MESSAGE };
+    }
+
+    if (error instanceof ShipmentPaymentMethodNotAllowedForDirectionError) {
+      return {
+        status: "error",
+        message: METHOD_NOT_ALLOWED_FOR_DIRECTION_MESSAGE,
+      };
     }
 
     if (error instanceof ShipmentQuoteIncompleteError) {

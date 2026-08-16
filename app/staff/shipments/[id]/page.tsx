@@ -105,6 +105,7 @@ async function findShipmentWorkspace(id: string) {
           amount: true,
           currency: true,
           zelleName: true,
+          mobileMoneyPayerName: true,
           createdAt: true,
           confirmedAt: true,
           cancelledAt: true,
@@ -241,6 +242,7 @@ function PaymentsSection({ shipment }: { shipment: ShipmentWorkspace }) {
               </div>
               <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                 {payment.zelleName ? <Detail label="Nom Zelle" value={payment.zelleName} /> : null}
+                {payment.mobileMoneyPayerName ? <Detail label="Nom Orange Money" value={payment.mobileMoneyPayerName} /> : null}
                 {payment.confirmedAt ? <Detail label="Confirmé le" value={dateTimeFormatter.format(payment.confirmedAt)} /> : null}
                 {payment.cancelledAt ? <Detail label="Annulé le" value={dateTimeFormatter.format(payment.cancelledAt)} /> : null}
               </dl>
